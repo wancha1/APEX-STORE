@@ -1,0 +1,6 @@
+{
+  "name": "Apex Devices & Electronics",
+  "description": "Premium electronics and gadgets showroom based in Lira, Uganda, featuring an interactive order customizer and direct same-day WhatsApp delivery dispatcher.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

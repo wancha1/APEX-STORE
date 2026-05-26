@@ -1,0 +1,194 @@
+[
+  {
+    "id": "iphone-15-pro-max",
+    "name": "Apple iPhone 15 Pro Max (Titanium)",
+    "description": "The ultimate peak tech device featuring an aerospace-grade titanium design, the revolutionary A17 Pro chip, and a powerful 5x Telephoto camera.",
+    "price": 5800000,
+    "originalPrice": 6400000,
+    "category": "Phones",
+    "rating": 4.9,
+    "reviewsCount": 148,
+    "badge": "9% OFF",
+    "colors": ["Natural Titanium", "Blue Titanium", "Black Titanium"],
+    "storages": ["256GB", "512GB"],
+    "stockStatus": "In Stock",
+    "specs": ["A17 Pro Chip", "6.7\" Super Retina XDR", "5x Optical Zoom Camera", "USB-C High Speed"],
+    "iconName": "Smartphone",
+    "images": [
+      "https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1591337676887-a217a6970c8a?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=1200&q=80"
+    ],
+    "videos": [
+      "https://www.w3schools.com/html/mov_bbb.mp4"
+    ],
+    "videoPreview": "https://www.w3schools.com/html/mov_bbb.mp4",
+    "detailedSpecs": [
+      { "label": "Chassis Material", "value": "Aerospace-Grade Grade 5 Titanium" },
+      { "label": "Processor", "value": "A17 Pro chip with 6-core GPU" },
+      { "label": "Camera System", "value": "48MP Main, 12MP Ultra Wide, 12MP 5x Telephoto" },
+      { "label": "Battery Life", "value": "Up to 29 hours video playback" },
+      { "label": "Connection Bus", "value": "USB-C with USB 3 speeds (up to 10Gb/s)" }
+    ]
+  },
+  {
+    "id": "galaxy-s24-ultra",
+    "name": "Samsung Galaxy S24 Ultra (AI Flagship)",
+    "description": "Outfitted with next-generation Galaxy AI capabilities, 200MP Main Lens, and the power of the embedded S-Pen stylus.",
+    "price": 5200000,
+    "originalPrice": 5800000,
+    "category": "Phones",
+    "rating": 4.8,
+    "reviewsCount": 92,
+    "badge": "HOT ITEM",
+    "colors": ["Titanium Gray", "Titanium Black", "Titanium Violet"],
+    "storages": ["256GB", "512GB"],
+    "stockStatus": "In Stock",
+    "specs": ["Snapdragon 8 Gen 3", "6.8\" Dynamic AMOLED 2X", "S-Pen Stylus Included", "Galaxy AI Engine"],
+    "iconName": "Smartphone",
+    "images": [
+      "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80"
+    ],
+    "videos": [
+      "https://assets.mixkit.co/videos/preview/mixkit-mobile-phone-screen-close-up-34311-large.mp4"
+    ],
+    "videoPreview": "https://assets.mixkit.co/videos/preview/mixkit-mobile-phone-screen-close-up-34311-large.mp4",
+    "detailedSpecs": [
+      { "label": "Processor", "value": "Snapdragon 8 Gen 3 for Galaxy" },
+      { "label": "Main Camera", "value": "200MP Wide Angle, 50MP Periscope Telephoto" },
+      { "label": "Stylus", "value": "Bluetooth S-Pen with Air Gestures" },
+      { "label": "Acoustic", "value": "Stereo Speakers tuned by AKG" },
+      { "label": "Screen Protection", "value": "Corning Gorilla Armor Glass" }
+    ]
+  },
+  {
+    "id": "macbook-pro-m3",
+    "name": "Apple MacBook Pro 14\" M3 Powerhouse",
+    "description": "Equipped with the groundbreaking 3-nanometer M3 Apple Silicon processor, massive 16GB memory architecture, and 512GB SSD.",
+    "price": 7900000,
+    "originalPrice": 8500000,
+    "category": "Laptops",
+    "rating": 4.9,
+    "reviewsCount": 74,
+    "badge": "SAVE 600K",
+    "colors": ["Space Gray", "Silver"],
+    "storages": ["512GB SSD", "1TB SSD"],
+    "stockStatus": "In Stock",
+    "specs": ["Apple M3 8-Core CPU", "16GB Unified Memory", "14.2\" Liquid Retina XDR", "Up to 22h Battery Life"],
+    "iconName": "Laptop",
+    "images": [
+      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1496181130204-755241524eab?auto=format&fit=crop&w=1200&q=80"
+    ],
+    "videos": [],
+    "detailedSpecs": [
+      { "label": "CPU", "value": "Apple M3 8-Core (4 performance / 4 efficiency)" },
+      { "label": "GPU", "value": "10-Core Graphics with hardware ray tracing" },
+      { "label": "Display", "value": "Liquid Retina XDR screen with ProMotion 120Hz" },
+      { "label": "Sound", "value": "Six-speaker sound system with force-cancelling woofers" }
+    ]
+  },
+  {
+    "id": "hp-elitebook-840",
+    "name": "HP EliteBook 840 G10 Business Elite",
+    "description": "High-power corporate computing. Crafted with premium solid metal, integrated multi-layered HP Wolf security, and the latest Core i7 processor.",
+    "price": 3100000,
+    "originalPrice": 3500000,
+    "category": "Laptops",
+    "rating": 4.7,
+    "reviewsCount": 41,
+    "badge": "BEST DEAL",
+    "colors": ["Astor Silver"],
+    "storages": ["512GB SSD"],
+    "stockStatus": "In Stock",
+    "specs": ["Intel Core i7 13th Gen", "16GB DDR5 RAM", "14.0\" FHD Anti-Glare", "Windows 11 Pro Licensed"],
+    "iconName": "Laptop",
+    "images": [
+      "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=1200&q=80"
+    ],
+    "detailedSpecs": [
+      { "label": "Processor", "value": "Intel Core i7-1355U up to 5.0 GHz" },
+      { "label": "RAM", "value": "16GB DDR5 Dual Channel" },
+      { "label": "Security System", "value": "HP Wolf Pro Security with Fingerprint reader" }
+    ]
+  },
+  {
+    "id": "sony-ps5-slim",
+    "name": "Sony PlayStation 5 Slim (Disc Edition)",
+    "description": "Experience lightning-fast loading with an ultra-high-speed SSD, deeper immersion with support for haptic feedback, adaptive triggers, and 3D Audio.",
+    "price": 2900000,
+    "originalPrice": 3300000,
+    "category": "Gaming",
+    "rating": 4.9,
+    "reviewsCount": 162,
+    "badge": "BEST SELLER",
+    "colors": ["Classic White"],
+    "storages": ["1TB SSD Storage"],
+    "stockStatus": "Low Stock",
+    "specs": ["Ultra-High Speed 1TB SSD", "Haptic Feedback Control", "4K-TV Gaming Output", "Ray Tracing Technology"],
+    "iconName": "Gamepad2",
+    "images": [
+      "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&w=1200&q=80"
+    ],
+    "detailedSpecs": [
+      { "label": "Storage Space", "value": "Custom 1TB PCIe Gen 4 Solid State Drive" },
+      { "label": "Optical Drive", "value": "4K Ultra HD Blu-ray Disc player" },
+      { "label": "Resolution Output", "value": "True 4K at up to 120Hz refresh rates" }
+    ]
+  },
+  {
+    "id": "samsung-55-4k",
+    "name": "Samsung 55\" Crystal UHD 4K Smart TV",
+    "description": "Unveil lifelike color clarity with direct Dynamic Crystal Color, a highly powerful superfast Crystal Processor 4K, and absolute frameless look.",
+    "price": 2400000,
+    "originalPrice": 2800000,
+    "category": "TVs & Audio",
+    "rating": 4.6,
+    "reviewsCount": 55,
+    "badge": "FREE WALL MOUNT",
+    "colors": ["Midnight Black"],
+    "stockStatus": "In Stock",
+    "specs": ["55\" HDR 4K Screen", "Tizen Smart TV OS", "Object Tracking Sound Lite", "DSTV/Netflix Preloaded"],
+    "iconName": "Tv",
+    "images": [
+      "https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=1200&q=80"
+    ]
+  },
+  {
+    "id": "airpods-pro-2",
+    "name": "Apple AirPods Pro (2nd Gen, USB-C)",
+    "description": "Delivers up to 2x more Active Noise Cancellation than its predecessor, Adaptive Audio, and Transparencies directly tuned to block city noise.",
+    "price": 950000,
+    "originalPrice": 1100000,
+    "category": "Accessories",
+    "rating": 4.8,
+    "reviewsCount": 204,
+    "badge": "14% OFF",
+    "colors": ["Classic White"],
+    "stockStatus": "In Stock",
+    "specs": ["Active Noise Cancelling", "Adaptive Transparency", "USB-C MagSafe Case", "Up to 6 hours listening"],
+    "iconName": "Headphones",
+    "images": [
+      "https://images.unsplash.com/photo-1588449668338-d13417f16cd9?auto=format&fit=crop&w=1200&q=80"
+    ]
+  },
+  {
+    "id": "anker-prime-100w",
+    "name": "Anker Prime 100W PD Fast Wall Charger",
+    "description": "Power up to three devices concurrently with two ultra-high performance USB-C ports and one USB-A port.",
+    "price": 28000,
+    "originalPrice": 35000,
+    "category": "Accessories",
+    "rating": 4.7,
+    "reviewsCount": 88,
+    "badge": "RECOMMENDED",
+    "colors": ["Steel Gray"],
+    "stockStatus": "In Stock",
+    "specs": ["100W Power Delivery", "Gallium Nitride (GaN) Tech", "3-Port Multi Charging", "ActiveShield Safety 2.0"],
+    "iconName": "Speaker",
+    "images": [
+      "https://images.unsplash.com/photo-1622445262465-2481c4574875?auto=format&fit=crop&w=1200&q=80"
+    ]
+  }
+]
