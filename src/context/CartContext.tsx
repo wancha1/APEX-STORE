@@ -78,6 +78,8 @@ interface CartContextType {
   // Supabase Auth Properties
   adminUser: any | null;
   setAdminUser: (user: any | null) => void;
+  csrfToken: string | null;
+  setCsrfToken: (token: string | null) => void;
   isSupabaseActive: boolean;
 
   // Customer Firebase Auth Properties
@@ -87,7 +89,179 @@ interface CartContextType {
   logoutCustomer: () => Promise<void>;
   loginCustomerWithEmail: (email: string, pass: string) => Promise<any>;
   signUpCustomerWithEmail: (email: string, pass: string, name: string) => Promise<any>;
+
+  // Analytics Tracker Features
+  analyticsEvents: any[];
+  trackAnalyticsEvent: (
+    type: "like" | "save" | "order",
+    productId?: string,
+    quantity?: number,
+    customerName?: string,
+    orderId?: string,
+    price?: number,
+    productName?: string
+  ) => void;
+  clearAnalyticsEvents: () => void;
 }
+
+const generatePrepopulatedEvents = () => {
+  const productsList = [
+    { id: "iphone-15-pro-max", name: "iPhone 15 Pro Max", price: 4800000 },
+    { id: "galaxy-s24-ultra", name: "Galaxy S24 Ultra", price: 4200000 },
+    { id: "macbook-pro-m3", name: "MacBook Pro M3", price: 6500000 },
+    { id: "sony-ps5-slim", name: "Sony PS5 Slim", price: 2300000 },
+    { id: "airpods-pro-2", name: "AirPods Pro 2", price: 950000 },
+  ];
+
+  const events: any[] = [];
+  const now = new Date();
+  const customerNames = ["Wanzira Ronnie", "Akwii Josephine", "Ocen Emmanuel", "Angom Brenda", "Okello Daniel"];
+
+  // 0 - 24 hrs ago (Interval 1)
+  events.push({
+    id: "evt-1",
+    timestamp: new Date(now.getTime() - 2 * 3600 * 1000).toISOString(),
+    type: "like",
+    productId: "iphone-15-pro-max",
+    productName: "iPhone 15 Pro Max",
+    price: 4800000
+  });
+  events.push({
+    id: "evt-2",
+    timestamp: new Date(now.getTime() - 4 * 3600 * 1000).toISOString(),
+    type: "save",
+    productId: "galaxy-s24-ultra",
+    productName: "Galaxy S24 Ultra",
+    price: 4200000
+  });
+  events.push({
+    id: "evt-3",
+    timestamp: new Date(now.getTime() - 6 * 3600 * 1000).toISOString(),
+    type: "order",
+    productId: "iphone-15-pro-max",
+    productName: "iPhone 15 Pro Max",
+    price: 4800000,
+    quantity: 1,
+    customerName: customerNames[0],
+    orderId: "APX-829104"
+  });
+  events.push({
+    id: "evt-4",
+    timestamp: new Date(now.getTime() - 12 * 3600 * 1000).toISOString(),
+    type: "like",
+    productId: "macbook-pro-m3",
+    productName: "MacBook Pro M3",
+    price: 6500000
+  });
+  events.push({
+    id: "evt-5",
+    timestamp: new Date(now.getTime() - 18 * 3600 * 1000).toISOString(),
+    type: "save",
+    productId: "airpods-pro-2",
+    productName: "AirPods Pro 2",
+    price: 950000
+  });
+  events.push({
+    id: "evt-5b",
+    timestamp: new Date(now.getTime() - 20 * 3600 * 1000).toISOString(),
+    type: "order",
+    productId: "sony-ps5-slim",
+    productName: "Sony PS5 Slim",
+    price: 2300000,
+    quantity: 2,
+    customerName: customerNames[1],
+    orderId: "APX-491902"
+  });
+
+  // 24 - 48 hrs ago (Interval 2)
+  events.push({
+    id: "evt-6",
+    timestamp: new Date(now.getTime() - 26 * 3600 * 1000).toISOString(),
+    type: "like",
+    productId: "galaxy-s24-ultra",
+    productName: "Galaxy S24 Ultra",
+    price: 4200000
+  });
+  events.push({
+    id: "evt-7",
+    timestamp: new Date(now.getTime() - 30 * 3600 * 1000).toISOString(),
+    type: "save",
+    productId: "macbook-pro-m3",
+    productName: "MacBook Pro M3",
+    price: 6500000
+  });
+  events.push({
+    id: "evt-8",
+    timestamp: new Date(now.getTime() - 36 * 3600 * 1000).toISOString(),
+    type: "order",
+    productId: "airpods-pro-2",
+    productName: "AirPods Pro 2",
+    price: 950000,
+    quantity: 1,
+    customerName: customerNames[2],
+    orderId: "APX-394851"
+  });
+  events.push({
+    id: "evt-9",
+    timestamp: new Date(now.getTime() - 42 * 3600 * 1000).toISOString(),
+    type: "save",
+    productId: "iphone-15-pro-max",
+    productName: "iPhone 15 Pro Max",
+    price: 4800000
+  });
+
+  // 48 - 72 hrs ago (Interval 3)
+  events.push({
+    id: "evt-10",
+    timestamp: new Date(now.getTime() - 50 * 3600 * 1000).toISOString(),
+    type: "like",
+    productId: "airpods-pro-2",
+    productName: "AirPods Pro 2",
+    price: 950000
+  });
+  events.push({
+    id: "evt-11",
+    timestamp: new Date(now.getTime() - 56 * 3600 * 1000).toISOString(),
+    type: "order",
+    productId: "galaxy-s24-ultra",
+    productName: "Galaxy S24 Ultra",
+    price: 4200000,
+    quantity: 1,
+    customerName: customerNames[3],
+    orderId: "APX-103945"
+  });
+  events.push({
+    id: "evt-12",
+    timestamp: new Date(now.getTime() - 64 * 3600 * 1000).toISOString(),
+    type: "save",
+    productId: "sony-ps5-slim",
+    productName: "Sony PS5 Slim",
+    price: 2300000
+  });
+
+  // Older than 72 hrs (Interval 4)
+  events.push({
+    id: "evt-13",
+    timestamp: new Date(now.getTime() - 80 * 3600 * 1000).toISOString(),
+    type: "order",
+    productId: "iphone-15-pro-max",
+    productName: "iPhone 15 Pro Max",
+    price: 4800000,
+    quantity: 1,
+    customerName: customerNames[4],
+    orderId: "APX-928410"
+  });
+  events.push({
+    id: "evt-14",
+    timestamp: new Date(now.getTime() - 90 * 3600 * 1000).toISOString(),
+    type: "like",
+    productId: "macbook-pro-m3",
+    productName: "MacBook Pro M3",
+    price: 6500000
+  });
+
+  return events.sort((a,b) => b.timestamp.localeCompare(a.timestamp));
+};
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
@@ -97,8 +271,69 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isProductsLoading, setIsProductsLoading] = useState<boolean>(true);
   const [productsError, setProductsError] = useState<string | null>(null);
 
+  // Analytics Tracker State
+  const [analyticsEvents, setAnalyticsEvents] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem("apex_analytics_events");
+      if (saved) {
+        return JSON.parse(saved);
+      } else {
+        const initialEvents = generatePrepopulatedEvents();
+        localStorage.setItem("apex_analytics_events", JSON.stringify(initialEvents));
+        return initialEvents;
+      }
+    } catch {
+      return [];
+    }
+  });
+
+  const trackAnalyticsEvent = (
+    type: "like" | "save" | "order",
+    productId?: string,
+    quantity = 1,
+    customerName?: string,
+    orderId?: string,
+    price?: number,
+    productName?: string
+  ) => {
+    try {
+      const targetProdName = productName || products.find(p => p.id === productId)?.name || "Premium Item";
+      const targetPrice = price || products.find(p => p.id === productId)?.price || 0;
+
+      const newEvent = {
+        id: `local-evt-${Math.floor(100000 + Math.random() * 900000)}`,
+        timestamp: new Date().toISOString(),
+        type,
+        productId,
+        productName: targetProdName,
+        price: targetPrice,
+        quantity,
+        customerName: customerName || (type === "order" ? "Cash Client" : undefined),
+        orderId,
+      };
+
+      setAnalyticsEvents((prev) => {
+        const updated = [newEvent, ...prev];
+        localStorage.setItem("apex_analytics_events", JSON.stringify(updated));
+        return updated;
+      });
+    } catch (err) {
+      console.error("Failed to track analytics event:", err);
+    }
+  };
+
+  const clearAnalyticsEvents = () => {
+    try {
+      localStorage.removeItem("apex_analytics_events");
+      setAnalyticsEvents([]);
+    } catch (err) {
+      console.error("Failed to clear analytics events:", err);
+    }
+  };
+
   // Supabase Admin User State
   const [adminUser, setAdminUser] = useState<any | null>(null);
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
 
   // Customer Firebase Auth State
   const [customerUser, setCustomerUser] = useState<any | null>(null);
@@ -152,25 +387,56 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Monitor Supabase Auth changes
+  // Monitor secure cookie admin sessions and Supabase Auth updates in parallel
   useEffect(() => {
+    const checkAdminSession = async () => {
+      try {
+        // Enforce cookie session lookup using credentials: include parameter (supports standard iframe cookies)
+        const res = await fetch("/api/admin/me", {
+          credentials: "include"
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.user) {
+            setAdminUser(data.user);
+            setCsrfToken(data.csrfToken || null);
+            return; // Cookie session active, skip standard Supabase guest lookups
+          }
+        }
+      } catch (err) {
+        console.error("Secure administrative credentials check failed:", err);
+      }
+
+      // Standby fallback to Supabase Anon session observer (if any)
+      const supabase = getSupabase();
+      if (supabase) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            setAdminUser(session.user);
+          }
+        } catch (err) {
+          console.error("Supabase initial session lookup error:", err);
+        }
+      }
+    };
+
+    checkAdminSession();
+
     const supabase = getSupabase();
     if (supabase) {
-      // Get initial session
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        setAdminUser(session?.user ?? null);
-      });
-
-      // Listen for auth events
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        setAdminUser(session?.user ?? null);
+        // Only update with Supabase session if secure cookie auth is inactive
+        if (!csrfToken) {
+          setAdminUser(session?.user ?? null);
+        }
       });
 
       return () => {
         subscription.unsubscribe();
       };
     }
-  }, []);
+  }, [csrfToken]);
 
   // Listen for Google Auth callback message from popup
   useEffect(() => {
@@ -334,6 +600,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (exists) {
         return prev.filter((id) => id !== productId);
       } else {
+        // Log like event
+        trackAnalyticsEvent("like", productId);
         return [...prev, productId];
       }
     });
@@ -368,6 +636,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (exists) {
         return prev.filter((item) => item.id !== product.id);
       } else {
+        // Log save/wishlist event
+        trackAnalyticsEvent("save", product.id, 1, undefined, undefined, product.price, product.name);
+        
         // Trigger customer notification popup
         setActiveNotification({ product, type: "wishlist" });
         return [...prev, product];
@@ -532,6 +803,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         refreshCatalog,
         adminUser,
         setAdminUser,
+        csrfToken,
+        setCsrfToken,
         isSupabaseActive: isSupabaseConfigured,
         customerUser,
         customerLoading,
@@ -539,6 +812,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         logoutCustomer,
         loginCustomerWithEmail,
         signUpCustomerWithEmail,
+        analyticsEvents,
+        trackAnalyticsEvent,
+        clearAnalyticsEvents,
       }}
     >
       {selectedHtmlIdFix(children)}
@@ -702,4 +978,17 @@ export function useCart() {
     throw new Error("useCart must be used inside a CartProvider");
   }
   return context;
+}
+
+export function useAdminAuth() {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error("useAdminAuth must be used inside a CartProvider");
+  }
+  return {
+    adminUser: context.adminUser,
+    csrfToken: context.csrfToken,
+    setAdminUser: context.setAdminUser,
+    setCsrfToken: context.setCsrfToken
+  };
 }

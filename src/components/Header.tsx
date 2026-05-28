@@ -62,16 +62,16 @@ export default function Header() {
   return (
     <header
       id="site-header"
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${
         isScrolled
-          ? "bg-white/4 border-b border-white/8 backdrop-blur-lg py-4 shadow-lg shadow-black/30"
-          : "bg-transparent py-6"
+          ? "bg-[#020208]/90 border-b border-blue-500/15 backdrop-blur-2xl py-3.5 shadow-[0_12px_44px_rgba(0,0,0,0.95)]"
+          : "bg-[#020208]/40 border-b border-white/5 backdrop-blur-xl py-6"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <a href="#" className="flex items-center gap-2 group transition-all duration-300 hover:scale-105" id="nav-logo">
+          <a href="#" className="flex items-center gap-2 group transition-all duration-300 hover:scale-[1.05] hover:drop-shadow-[0_0_15px_rgba(59,130,246,0.65)]" id="nav-logo">
             <div className="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(59,130,246,0.6)] transition-all duration-300">
               <span className="font-display font-medium text-white text-lg">A</span>
               <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-blue-500 to-purple-600 blur opacity-40 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
@@ -92,7 +92,7 @@ export default function Header() {
               <a
                 key={link.name}
                 href={link.href}
-                className="text-gray-300 hover:text-white text-sm font-medium transition-all duration-300 hover:scale-[1.08] hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.5)] relative group"
+                className="text-gray-300 hover:text-white text-sm font-medium transition-all duration-300 hover:scale-[1.05] hover:drop-shadow-[0_0_12px_rgba(139,92,246,0.6)] relative group"
               >
                 {link.name}
                 <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-gradient-to-r from-blue-400 to-purple-500 transition-all duration-300 group-hover:w-full" />
@@ -105,7 +105,7 @@ export default function Header() {
             {/* Elegant Search bar trigger */}
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="flex items-center gap-2.5 px-4 py-2 rounded-xl border border-white/5 bg-white/4 hover:bg-white/10 hover:border-white/10 text-slate-400 hover:text-white transition-all cursor-pointer font-sans text-xs group"
+              className="flex items-center gap-2.5 px-4 py-2 rounded-xl border animate-border-pulse bg-white/4 hover:bg-white/10 text-slate-400 hover:text-white transition-all cursor-pointer font-sans text-xs group"
               title="Search My Store Products"
               aria-label="Open global search"
             >

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import AdminAnalytics from "./AdminAnalytics";
 import { useCart } from "../context/CartContext";
 import { parseCsvToProducts } from "../utils/csvParser";
 import { getSimulatedCsvContent } from "../utils/simulatedStock";
@@ -55,11 +56,13 @@ export default function BulkImporter() {
     refreshCatalog,
     adminUser,
     setAdminUser,
+    csrfToken,
+    setCsrfToken,
     isSupabaseActive
   } = useCart();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"directory" | "importer" | "mediaHub" | "setup" | "sheetsSync">("directory");
+  const [activeTab, setActiveTab] = useState<"directory" | "importer" | "mediaHub" | "setup" | "sheetsSync" | "analytics">("directory");
 
   // Google Sheets Product Sync states
   const [sheets, setSheets] = useState<SheetConfig[]>(() => {
@@ -177,7 +180,8 @@ export default function BulkImporter() {
       const resp = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.toLowerCase().trim(), password })
+        body: JSON.stringify({ email: email.toLowerCase().trim(), password }),
+        credentials: "include" // vial for transmitting secure cookies
       });
 
       const contentType = resp.headers.get("content-type");
@@ -192,7 +196,9 @@ export default function BulkImporter() {
 
       if (resp.ok && data) {
         if (data.success && data.user) {
+          // Store token securely inside cookie container, and grab csrfToken for double-submit
           setAdminUser(data.user);
+          setCsrfToken(data.csrfToken || null);
           setIsAuthLoading(false);
           return;
         }
@@ -209,11 +215,23 @@ export default function BulkImporter() {
   };
 
   const handleSignOut = async () => {
-    const supabase = getSupabase();
-    if (supabase) {
-      await supabase.auth.signOut();
+    try {
+      const supabase = getSupabase();
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
+      
+      // Perform server-side session cookie neutralization
+      await fetch("/api/admin/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+    } catch (err) {
+      console.error("Failed to neutralize cookie session:", err);
+    } finally {
+      setAdminUser(null);
+      setCsrfToken(null);
     }
-    setAdminUser(null);
   };
 
   // Directory Filtration & Pagination
@@ -303,13 +321,30 @@ export default function BulkImporter() {
 
     const supabase = getSupabase();
     if (supabase && isSupabaseActive) {
-      const sbMapped = mapFrontendToSupabase(updated);
-      const { error } = await supabase
-        .from("products")
-        .upsert(sbMapped as any);
-
-      if (error) {
-        alert(`Failed to save to database: ${error.message}`);
+      if (csrfToken) {
+        const sbMapped = mapFrontendToSupabase(updated);
+        try {
+          const res = await fetch("/api/admin/products", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-Token": csrfToken
+            },
+            body: JSON.stringify(sbMapped),
+            credentials: "include"
+          });
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            alert(`Failed to save to database securely: ${errData.error || res.statusText}`);
+            return;
+          }
+        } catch (apiErr) {
+          console.error("Secure save handshake offline:", apiErr);
+          alert("Administrative server communications are currently offline. Cannot persist changes.");
+          return;
+        }
+      } else {
+        alert("Action denied. You do not have an active administrative session. Please log in.");
         return;
       }
     }
@@ -324,13 +359,27 @@ export default function BulkImporter() {
 
     const supabase = getSupabase();
     if (supabase && isSupabaseActive) {
-      const { error } = await supabase
-        .from("products")
-        .delete()
-        .eq("id", id);
-
-      if (error) {
-        alert(`Failed to delete from database: ${error.message}`);
+      if (csrfToken) {
+        try {
+          const res = await fetch(`/api/admin/products/${encodeURIComponent(id)}`, {
+            method: "DELETE",
+            headers: {
+              "X-CSRF-Token": csrfToken
+            },
+            credentials: "include"
+          });
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            alert(`Failed to delete securely from database: ${errData.error || res.statusText}`);
+            return;
+          }
+        } catch (apiErr) {
+          console.error("Secure delete handshake offline:", apiErr);
+          alert("Administrative server communications are currently offline. Cannot delete entry.");
+          return;
+        }
+      } else {
+        alert("Action denied. You do not have an active administrative session. Please log in.");
         return;
       }
     }
@@ -479,12 +528,33 @@ export default function BulkImporter() {
           return mapFrontendToSupabase({ ...p, badge: calculatedBadge });
         });
 
-        const { error } = await supabase
-          .from("products")
-          .upsert(mappedSegment as any);
+        let batchError = false;
+        if (csrfToken) {
+          try {
+            const res = await fetch("/api/admin/products", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-Token": csrfToken
+              },
+              body: JSON.stringify(mappedSegment),
+              credentials: "include"
+            });
+            if (!res.ok) {
+              const errData = await res.json().catch(() => ({}));
+              console.error("Batch error inside bulk upsert secure API:", errData.error || res.statusText);
+              batchError = true;
+            }
+          } catch (apiErr) {
+            console.error("Batch API write offline:", apiErr);
+            batchError = true;
+          }
+        } else {
+          console.error("Batch rejected: Action denied. Session expired.");
+          batchError = true;
+        }
 
-        if (error) {
-          console.error("Batch error inside bulk upsert:", error);
+        if (batchError) {
           failedCount += segment.length;
         } else {
           committedCount += segment.length;
@@ -544,7 +614,7 @@ export default function BulkImporter() {
     }
   };
 
-  // Upload to Supabase Storage Bucket 'product-media/products'
+  // Upload to Supabase Storage Bucket securely via custom server API proxying
   const uploadMediaFiles = async (files: File[]) => {
     setIsUploadingMedia(true);
     const supabase = getSupabase();
@@ -564,29 +634,43 @@ export default function BulkImporter() {
     }
 
     try {
+      if (!csrfToken) {
+        alert("Action denied. Administrative session expired or token is missing.");
+        setIsUploadingMedia(false);
+        return;
+      }
+
       for (const file of files) {
-        const cleanName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-        const filePath = `products/${cleanName}`;
+        const formData = new FormData();
+        formData.append("file", file);
 
-        const { data, error } = await supabase.storage
-          .from("product-media")
-          .upload(filePath, file, { cacheControl: "3600", upsert: true });
-
-        if (error) throw error;
-
-        // Retrieve public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from("product-media")
-          .getPublicUrl(filePath);
-
-        setUploadedUrls((prev) => [
-          {
-            name: file.name,
-            url: publicUrl,
-            size: `${(file.size / 1024).toFixed(1)} KB`
+        const res = await fetch("/api/admin/upload", {
+          method: "POST",
+          headers: {
+            "X-CSRF-Token": csrfToken
           },
-          ...prev
-        ]);
+          body: formData,
+          credentials: "include"
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Upload failed: ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        if (data.success && data.file) {
+          setUploadedUrls((prev) => [
+            {
+              name: data.file.name,
+              url: data.file.url,
+              size: data.file.size
+            },
+            ...prev
+          ]);
+        } else {
+          throw new Error("Invalid response envelope from server.");
+        }
       }
     } catch (err: any) {
       alert(`Media Upload error: ${err.message || "Make sure you have created the bucket 'product-media' in Supabase Storage and set to public!"}`);
@@ -762,6 +846,10 @@ export default function BulkImporter() {
     const writeSkipped = previewCounts ? previewCounts.skippedCount : 0;
 
     try {
+      if (!csrfToken) {
+        throw new Error("No active administrative session is configured. Please login.");
+      }
+
       const supabase = getSupabase();
       if (supabase && isSupabaseActive) {
         // Safe batch processing (chunk sizes of 100)
@@ -772,18 +860,25 @@ export default function BulkImporter() {
           const segment = previewSheetProducts.slice(i, i + segmentSize);
           const mapped = segment.map(p => mapFrontendToSupabase(p));
           
-          const { error } = await supabase
-            .from("products")
-            .upsert(mapped as any);
+          const res = await fetch("/api/admin/products", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-Token": csrfToken
+            },
+            body: JSON.stringify(mapped),
+            credentials: "include"
+          });
 
-          if (error) {
-            throw new Error(`Supplied row upsert chunk #${batchNo} failed: ${error.message}`);
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(`Supplied row upsert chunk #${batchNo} failed: ${errData.error || res.statusText}`);
           }
         }
 
-        // Try syncing configurations to the Supabase sheet_configs and log table
+        // Try syncing configurations securely inside the administrative API
         try {
-          await supabase.from("sheet_configs").upsert({
+          const configPayload = {
             id: config.id,
             name: config.name,
             url_or_id: config.urlOrId,
@@ -791,9 +886,9 @@ export default function BulkImporter() {
             category_filter: config.categoryFilter,
             is_active: config.isActive,
             last_sync_time: logTimestamp
-          } as any);
+          };
 
-          await supabase.from("sheet_sync_logs").insert({
+          const logPayload = {
             id: logId,
             sheet_name: config.name,
             timestamp: logTimestamp,
@@ -803,9 +898,33 @@ export default function BulkImporter() {
             skipped_count: writeSkipped,
             failed_rows: previewSkippedRows,
             log_text: `Processed synchronization for '${config.name}'. Success: ${writeAdded} added, ${writeUpdated} updated, ${writeSkipped} rows flagged.`
-          } as any);
+          };
+
+          const configRes = await fetch("/api/admin/sheet-configs", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-Token": csrfToken
+            },
+            body: JSON.stringify(configPayload),
+            credentials: "include"
+          });
+
+          const logRes = await fetch("/api/admin/sheet-sync-logs", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-Token": csrfToken
+            },
+            body: JSON.stringify(logPayload),
+            credentials: "include"
+          });
+
+          if (!configRes.ok || !logRes.ok) {
+            console.warn("Could not write Sheets operational configs/logs securely to Supabase tables.");
+          }
         } catch (dbErr) {
-          console.warn("Could not write Sheets operational logs to Supabase tables. Proceeding with client Sandbox cache fallback.", dbErr);
+          console.warn("Could not write Sheets operational logs securely to Supabase tables. Proceeding with client Sandbox cache fallback.", dbErr);
         }
 
         await refreshCatalog();
@@ -880,17 +999,26 @@ export default function BulkImporter() {
       const logTimestamp = new Date().toISOString();
 
       const supabase = getSupabase();
-      if (supabase && isSupabaseActive) {
+      if (supabase && isSupabaseActive && csrfToken) {
         const segmentSize = 100;
         for (let i = 0; i < results.validProductsToSave.length; i += segmentSize) {
           const segment = results.validProductsToSave.slice(i, i + segmentSize);
           const mapped = segment.map(p => mapFrontendToSupabase(p));
-          await supabase.from("products").upsert(mapped as any);
+          
+          await fetch("/api/admin/products", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-Token": csrfToken
+            },
+            body: JSON.stringify(mapped),
+            credentials: "include"
+          });
         }
         await refreshCatalog();
 
         try {
-          await supabase.from("sheet_configs").upsert({
+          const configPayload = {
             id: config.id,
             name: config.name,
             url_or_id: config.urlOrId,
@@ -898,9 +1026,9 @@ export default function BulkImporter() {
             category_filter: config.categoryFilter,
             is_active: config.isActive,
             last_sync_time: logTimestamp
-          } as any);
+          };
 
-          await supabase.from("sheet_sync_logs").insert({
+          const logPayload = {
             id: logId,
             sheet_name: config.name,
             timestamp: logTimestamp,
@@ -910,7 +1038,27 @@ export default function BulkImporter() {
             skipped_count: results.skippedCount,
             failed_rows: results.skippedRows,
             log_text: `Automated background check-in for '${config.name}'. Results: ${results.addedCount} added, ${results.updatedCount} updated, ${results.skippedCount} skipped.`
-          } as any);
+          };
+
+          await fetch("/api/admin/sheet-configs", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-Token": csrfToken
+            },
+            body: JSON.stringify(configPayload),
+            credentials: "include"
+          });
+
+          await fetch("/api/admin/sheet-sync-logs", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-Token": csrfToken
+            },
+            body: JSON.stringify(logPayload),
+            credentials: "include"
+          });
         } catch (e) {
           // silent error
         }
@@ -1104,51 +1252,79 @@ export default function BulkImporter() {
                   </div>
 
                   {/* NAV TABS */}
-                  <div className="flex flex-wrap items-center gap-2 bg-black/40 p-1.5 rounded-2xl border border-white/5">
+                  <div className="flex flex-wrap items-center gap-2 bg-black/50 p-2 rounded-2xl border border-white/10 shadow-lg backdrop-blur-md">
                     <button
+                      id="tab-btn-directory"
                       onClick={() => setActiveTab("directory")}
-                      className={`px-3.5 py-1.5 text-xs font-bold font-sans rounded-xl transition-all cursor-pointer ${
-                        activeTab === "directory" ? "bg-emerald-500 text-white shadow" : "text-slate-400 hover:text-white"
+                      className={`px-4 py-2 text-xs font-bold font-sans rounded-xl transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center gap-1.5 ${
+                        activeTab === "directory"
+                          ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.35)] font-extrabold border border-emerald-400/20"
+                          : "text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.03]"
                       }`}
                     >
-                      Product Directory
+                      <span>Product Directory</span>
                     </button>
                     <button
+                      id="tab-btn-importer"
                       onClick={() => setActiveTab("importer")}
-                      className={`px-3.5 py-1.5 text-xs font-bold font-sans rounded-xl transition-all cursor-pointer ${
-                        activeTab === "importer" ? "bg-emerald-500 text-white shadow" : "text-slate-400 hover:text-white"
+                      className={`px-4 py-2 text-xs font-bold font-sans rounded-xl transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center gap-1.5 ${
+                        activeTab === "importer"
+                          ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.35)] font-extrabold border border-emerald-400/20"
+                          : "text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.03]"
                       }`}
                     >
-                      Bulk CSV Import
+                      <span>Bulk CSV Import</span>
                     </button>
                     <button
+                      id="tab-btn-analytics"
+                      onClick={() => setActiveTab("analytics")}
+                      className={`px-4 py-2 text-xs font-bold font-sans rounded-xl transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center gap-1.5 ${
+                        activeTab === "analytics"
+                          ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.35)] font-extrabold border border-emerald-400/20"
+                          : "text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.03]"
+                      }`}
+                    >
+                      <Clock className="w-3.5 h-3.5 shrink-0" />
+                      <span>Store Analytics</span>
+                    </button>
+                    <button
+                      id="tab-btn-sheetssync"
                       onClick={() => setActiveTab("sheetsSync")}
-                      className={`px-3.5 py-1.5 text-xs font-bold font-sans rounded-xl transition-all cursor-pointer flex items-center gap-1 transition-all ${
-                        activeTab === "sheetsSync" ? "bg-emerald-500 text-white shadow" : "text-emerald-400/80 hover:text-white hover:bg-emerald-500/10"
+                      className={`px-4 py-2 text-xs font-bold font-sans rounded-xl transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center gap-1.5 ${
+                        activeTab === "sheetsSync"
+                          ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.35)] font-extrabold border border-emerald-400/20"
+                          : "text-emerald-400/80 hover:text-white hover:bg-emerald-500/10 hover:scale-[1.03] border border-emerald-500/10"
                       }`}
                     >
                       <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />
                       <span>Google Sheets Sync</span>
                     </button>
                     <button
+                      id="tab-btn-mediahub"
                       onClick={() => setActiveTab("mediaHub")}
-                      className={`px-3.5 py-1.5 text-xs font-bold font-sans rounded-xl transition-all cursor-pointer ${
-                        activeTab === "mediaHub" ? "bg-emerald-500 text-white shadow" : "text-slate-400 hover:text-white"
+                      className={`px-4 py-2 text-xs font-bold font-sans rounded-xl transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center gap-1.5 ${
+                        activeTab === "mediaHub"
+                          ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.35)] font-extrabold border border-emerald-400/20"
+                          : "text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.03]"
                       }`}
                     >
-                      CDN Media Hub
+                      <span>CDN Media Hub</span>
                     </button>
                     <button
+                      id="tab-btn-setup"
                       onClick={() => setActiveTab("setup")}
-                      className={`px-3.5 py-1.5 text-xs font-bold font-sans rounded-xl transition-all cursor-pointer ${
-                        activeTab === "setup" ? "bg-emerald-500 text-white shadow" : "text-slate-400 hover:text-white"
+                      className={`px-4 py-2 text-xs font-bold font-sans rounded-xl transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center gap-1.5 ${
+                        activeTab === "setup"
+                          ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.35)] font-extrabold border border-emerald-400/20"
+                          : "text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.03]"
                       }`}
                     >
-                      Database CLI Instructions
+                      <span>Database CLI Instructions</span>
                     </button>
                     <button
+                      id="tab-btn-logout"
                       onClick={handleSignOut}
-                      className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-colors cursor-pointer ml-3"
+                      className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all duration-300 cursor-pointer ml-3 hover:scale-[1.08] active:scale-90"
                       title="Admin Log Out"
                     >
                       <LogOut className="w-4 h-4" />
@@ -1617,6 +1793,10 @@ export default function BulkImporter() {
                       </div>
                     </div>
                   </div>
+                )}
+
+                {activeTab === "analytics" && (
+                  <AdminAnalytics />
                 )}
 
                 {/* TAB CONTENT: Google Sheets Product Sync System (ADMINS ONLY) */}

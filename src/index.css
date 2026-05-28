@@ -10,6 +10,7 @@
   --color-brand-purple: #8b5cf6;
 
   --animate-shimmer: shimmer 2.2s infinite linear;
+  --animate-border-pulse: border-pulse 2s infinite ease-in-out;
 
   @keyframes shimmer {
     0% {
@@ -17,6 +18,17 @@
     }
     100% {
       transform: translateX(100%);
+    }
+  }
+
+  @keyframes border-pulse {
+    0%, 100% {
+      border-color: rgba(59, 130, 246, 0.15);
+      box-shadow: 0 0 2px rgba(59, 130, 246, 0.1);
+    }
+    50% {
+      border-color: rgba(59, 130, 246, 0.7);
+      box-shadow: 0 0 14px rgba(59, 130, 246, 0.35);
     }
   }
 }

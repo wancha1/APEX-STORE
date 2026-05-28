@@ -57,6 +57,7 @@ export default function CartDrawer() {
     customerLoading,
     loginCustomerWithGoogle,
     logoutCustomer,
+    trackAnalyticsEvent,
   } = useCart();
 
   // Checkout states
@@ -287,6 +288,24 @@ ${activeCode ? `• *Discount Applied:* -${formatCurrency(discountAmount)} (${ac
 Hello ${BUSINESS_INFO.name}! 👋 I placed an order via your online store. Please verify stock availability at your store so I can proceed with immediate payment!`;
 
     window.open(`https://wa.me/${BUSINESS_INFO.whatsappNumber}?text=${encodeURIComponent(invoiceMessage)}`, "_blank");
+
+    // Track analytical report events
+    try {
+      cart.forEach((item) => {
+        trackAnalyticsEvent(
+          "order",
+          item.product.id,
+          item.quantity,
+          customerName || "Cash Client",
+          orderId,
+          item.product.price,
+          item.product.name
+        );
+      });
+    } catch (err) {
+      console.error("Failed to track order analytics event:", err);
+    }
+
     clearCart();
     setIsCartOpen(false);
     setIsCheckingOut(false);

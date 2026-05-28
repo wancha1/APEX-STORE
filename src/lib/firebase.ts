@@ -1,5 +1,9 @@
 import { initializeApp } from "firebase/app";
 import { 
+  initializeAuth,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  inMemoryPersistence,
   getAuth, 
   GoogleAuthProvider, 
   signInWithPopup, 
@@ -19,7 +23,18 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+
+// Resilient auth initialization with graceful browser persistence fallbacks
+let authInstance;
+try {
+  authInstance = initializeAuth(app, {
+    persistence: [browserLocalPersistence, browserSessionPersistence, inMemoryPersistence]
+  });
+} catch (e) {
+  authInstance = getAuth(app);
+}
+
+export const auth = authInstance;
 export const googleProvider = new GoogleAuthProvider();
 
 export { 
