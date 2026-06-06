@@ -128,7 +128,7 @@ export const PRODUCTS: Product[] = [
     badge: "BEST DEAL",
     colors: ["Astor Silver"],
     storages: ["512GB SSD"],
-    stockStatus: "In Stock",
+    stockStatus: "Out of Stock",
     specs: ["Intel Core i7 13th Gen", "16GB DDR5 RAM", "14.0\" FHD Anti-Glare", "Windows 11 Pro Licensed"],
     iconName: "Laptop"
   },
@@ -189,7 +189,7 @@ export const PRODUCTS: Product[] = [
     reviewsCount: 88,
     badge: "RECOMMENDED",
     colors: ["Steel Gray"],
-    stockStatus: "In Stock",
+    stockStatus: "Out of Stock",
     specs: ["100W Power Delivery", "Gallium Nitride (GaN) Tech", "3-Port Multi Charging", "ActiveShield Safety 2.0"],
     iconName: "Speaker"
   }

@@ -4,15 +4,19 @@ import { Product, CartItem } from "../types";
 import { PRODUCTS } from "../data";
 import { getSupabase, isSupabaseConfigured, mapSupabaseToFrontend } from "../lib/supabase";
 import { 
-  auth as firebaseAuth, 
-  googleProvider, 
-  signInWithPopup, 
+  auth as firebaseAuth
+} from "../lib/firebase";
+import { 
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
   signOut as firebaseSignOut,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile
-} from "../lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
+} from "firebase/auth";
+
+const googleProvider = new GoogleAuthProvider();
 
 interface CartContextType {
   activeNotification: {

@@ -17,13 +17,17 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
+// Tell Express to trust the reverse proxy (Cloud Run router / Nginx) to retrieve the correct client IP address
+app.set('trust proxy', 1);
+
 // Setup Rate Limiters to enforce anti-malicious DDoS / rate-limiting boundaries
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 mins
   max: 200, // limit each IP to 200 requests per 15 minutes
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many requests. Please try again later.' }
+  message: { error: 'Too many requests. Please try again later.' },
+  validate: { default: false }
 });
 
 const loginLimiter = rateLimit({
@@ -31,7 +35,8 @@ const loginLimiter = rateLimit({
   max: 10, // Limit admin login attempts strictly to protect against brute-force attacks
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many login attempts. Please try again after 15 minutes.' }
+  message: { error: 'Too many login attempts. Please try again after 15 minutes.' },
+  validate: { default: false }
 });
 
 // Configure Multer in-memory storage for safe stream-based file uploads
@@ -555,6 +560,326 @@ app.post('/api/chat', async (req, res) => {
   } catch (error: any) {
     console.error('Gemini error:', error);
     res.status(500).json({ error: 'Evelyn is experiencing high frequency. Please try again in a few seconds.' });
+  }
+});
+
+// Memory store for restock alert subscriptions
+interface RestockSubscription {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  productId: string;
+  productName: string;
+  createdAt: string;
+  status: 'pending' | 'notified';
+}
+
+let restockSubscriptions: RestockSubscription[] = [
+  {
+    id: "sub-1",
+    name: "Akwii Josephine",
+    email: "josephine.akwii@gmail.com",
+    phone: "+256 772 123 456",
+    productId: "hp-elitebook-840",
+    productName: "HP EliteBook 840 G10 Business Elite",
+    createdAt: new Date(Date.now() - 36 * 3600 * 1000).toISOString(),
+    status: "pending"
+  },
+  {
+    id: "sub-2",
+    name: "Ocen Emmanuel",
+    email: "ocen.emman@lira.tech",
+    phone: "+256 781 987 654",
+    productId: "hp-elitebook-840",
+    productName: "HP EliteBook 840 G10 Business Elite",
+    createdAt: new Date(Date.now() - 12 * 3600 * 1000).toISOString(),
+    status: "pending"
+  }
+];
+
+// Price Drop Alerts memory store
+interface PriceDropSubscription {
+  id: string;
+  productId: string;
+  productName: string;
+  name: string;
+  email: string;
+  targetPrice: number;
+  currentPrice: number;
+  createdAt: string;
+  status: 'pending' | 'notified';
+}
+
+let priceDropSubscriptions: PriceDropSubscription[] = [
+  {
+    id: "pds-1",
+    productId: "titanbook-pro",
+    productName: "Apex TitanBook Pro 16",
+    name: "Auma Sharon",
+    email: "sharon.auma@outlook.com",
+    targetPrice: 6200000,
+    currentPrice: 6800000,
+    createdAt: new Date(Date.now() - 10 * 3600 * 1000).toISOString(),
+    status: 'pending'
+  }
+];
+
+// Product Reviews memory store
+interface ProductReview {
+  id: string;
+  productId: string;
+  userName: string;
+  userEmail: string;
+  rating: number; // 1 to 5 stars
+  comment: string;
+  timestamp: string;
+}
+
+let productReviews: ProductReview[] = [
+  {
+    id: "rev-3732",
+    productId: "titanbook-pro",
+    userName: "Pastor Benson Ocen",
+    userEmail: "benson.sound@church.lira.org",
+    rating: 5,
+    comment: "Absolute mobile workstation! I edit sermons, high resolution footage and audio files smoothly on my way to Kakoge.",
+    timestamp: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString()
+  },
+  {
+    id: "rev-3733",
+    productId: "cybershock-rig",
+    userName: "Ojok Douglas",
+    userEmail: "douglas.ojok@mail.co.ug",
+    rating: 5,
+    comment: "Heavy duty RTX system. Delivered directly to Obote avenue within a single afternoon.",
+    timestamp: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString()
+  }
+];
+
+// 1. Subscribe to Restock Notifications (public endpoint)
+app.post('/api/notify-restock', (req, res) => {
+  try {
+    const { productId, productName, name, email, phone } = req.body;
+    if (!productId || !name || !email) {
+      return res.status(400).json({ error: 'Missing required subscriber registration fields (productId, name, email).' });
+    }
+
+    const subId = `sub-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+    const newSubscription: RestockSubscription = {
+      id: subId,
+      name,
+      email,
+      phone: phone || '',
+      productId,
+      productName: productName || productId,
+      createdAt: new Date().toISOString(),
+      status: 'pending'
+    };
+
+    restockSubscriptions.push(newSubscription);
+
+    console.log(`[RESTOCK SUBSCRIPTION CREATED] Subscriber: ${name} (${email}) registered for restock email alert on: ${productName || productId}`);
+
+    return res.json({
+      success: true,
+      message: 'Successfully registered for restock notification!',
+      subscription: newSubscription
+    });
+  } catch (err: any) {
+    console.error('Restock subscribe controller error:', err);
+    return res.status(500).json({ error: 'Server error processing restock subscription request.' });
+  }
+});
+
+// 2. Fetch Restock active subscriptions (secured admin portal view)
+app.get('/api/admin/notify-subscriptions', adminAuthMiddleware, (req, res) => {
+  return res.json({
+    success: true,
+    subscriptions: restockSubscriptions
+  });
+});
+
+// 3. restock notification release trigger (secured admin portal endpoint)
+app.post('/api/admin/notify-release', adminAuthMiddleware, (req, res) => {
+  try {
+    const { subscriptionId } = req.body;
+    if (!subscriptionId) {
+      return res.status(400).json({ error: 'Missing subscriptionId parameter.' });
+    }
+
+    const subscription = restockSubscriptions.find(sub => sub.id === subscriptionId);
+    if (!subscription) {
+      return res.status(404).json({ error: 'Subscription not found.' });
+    }
+
+    subscription.status = 'notified';
+
+    // Simulate sending restock email alerts and log to system out
+    console.log(`[SIMULATING EMAIL RESTOCK ACTION]
+=========================================
+TO: ${subscription.email} <${subscription.name}>
+PHONE: ${subscription.phone || 'N/A'}
+SUBJECT: 🎉 RESTOCKED ALERT: ${subscription.productName} is back in stock at Apex!
+BODY: Hi ${subscription.name}, great news! The ${subscription.productName} that you requested has been restocked in our showroom in Lira, Uganda. Visit us today or order on WhatsApp to lock in your flagship gadget!
+=========================================`);
+
+    return res.json({
+      success: true,
+      message: `Restock notification completed! Email alert simulated for ${subscription.email}.`
+    });
+  } catch (err: any) {
+    console.error('Restock release error:', err);
+    return res.status(500).json({ error: 'Server error releasing restock alerts.' });
+  }
+});
+
+// 4. Subscribe to Price Drop Notifications (public endpoint)
+app.post('/api/notify-price-drop', (req, res) => {
+  try {
+    const { productId, productName, name, email, targetPrice, currentPrice } = req.body;
+    if (!productId || !name || !email || !targetPrice) {
+      return res.status(400).json({ error: 'Missing required field parameters (productId, name, email, targetPrice).' });
+    }
+
+    const newSub: PriceDropSubscription = {
+      id: `pds-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      productId,
+      productName: productName || productId,
+      name,
+      email,
+      targetPrice: Number(targetPrice),
+      currentPrice: Number(currentPrice || 0),
+      createdAt: new Date().toISOString(),
+      status: 'pending'
+    };
+
+    priceDropSubscriptions.unshift(newSub);
+    console.log(`[PRICE DROP SUBSCRIPTION CREATED] Subscriber: ${name} (${email}) target threshold: ${targetPrice} UGX (Current: ${currentPrice} UGX)`);
+
+    return res.json({
+      success: true,
+      message: 'Successfully registered for price drop notification alerts!',
+      subscription: newSub
+    });
+  } catch (err: any) {
+    console.error('Price drop subscription error:', err);
+    return res.status(500).json({ error: 'Server error processing price drop subscription.' });
+  }
+});
+
+// 5. Fetch Price Drop subscriptions (secured admin portal view)
+app.get('/api/admin/price-drop-subscriptions', adminAuthMiddleware, (req, res) => {
+  return res.json({
+    success: true,
+    subscriptions: priceDropSubscriptions
+  });
+});
+
+// 6. Price drop alert release trigger (secured admin portal endpoint)
+app.post('/api/admin/price-drop-release', adminAuthMiddleware, (req, res) => {
+  try {
+    const { subscriptionId } = req.body;
+    if (!subscriptionId) {
+      return res.status(400).json({ error: 'Missing subscriptionId parameter.' });
+    }
+
+    const subscription = priceDropSubscriptions.find(sub => sub.id === subscriptionId);
+    if (!subscription) {
+      return res.status(404).json({ error: 'Subscription not found.' });
+    }
+
+    subscription.status = 'notified';
+
+    // Simulate sending price drop email alert
+    console.log(`[SIMULATING EMAIL PRICE DROP TO CLIENT]
+=========================================
+TO: ${subscription.email} <${subscription.name}>
+SUBJECT: 💰 PRICE DROP ALERT: ${subscription.productName} dropped to your target price!
+BODY: Hi ${subscription.name}, fantastic news! The ${subscription.productName} has been discounted to match or beat your target threshold of ${subscription.targetPrice.toLocaleString()} UGX.
+Check our Obote Avenue showroom or message us on WhatsApp now!
+=========================================`);
+
+    return res.json({
+      success: true,
+      message: `Price drop email notification successfully simulated and dispatched to ${subscription.email}!`
+    });
+  } catch (err: any) {
+    console.error('Price drop release error:', err);
+    return res.status(500).json({ error: 'Server error releasing price drop notification.' });
+  }
+});
+
+// 7. Fetch reviews of a product (public endpoint)
+app.get('/api/products/:productId/reviews', (req, res) => {
+  try {
+    const { productId } = req.params;
+    const filtered = productReviews.filter(rev => rev.productId === productId);
+    return res.json({ success: true, reviews: filtered });
+  } catch (err) {
+    console.error('Fetch reviews error:', err);
+    return res.status(500).json({ error: 'Server error retrieving product reviews.' });
+  }
+});
+
+// 8. Submit review of a product (public endpoint)
+app.post('/api/products/:productId/reviews', (req, res) => {
+  try {
+    const { productId } = req.params;
+    const { userName, userEmail, rating, comment } = req.body;
+    if (!userName || !userEmail || !rating || !comment) {
+      return res.status(400).json({ error: 'Username, email, rating, and comment are required fields.' });
+    }
+    const valRating = Number(rating);
+    if (isNaN(valRating) || valRating < 1 || valRating > 5) {
+      return res.status(400).json({ error: 'Rating must be a numeric score between 1 and 5 stars.' });
+    }
+
+    const newReview: ProductReview = {
+      id: `rev-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      productId,
+      userName,
+      userEmail,
+      rating: valRating,
+      comment,
+      timestamp: new Date().toISOString()
+    };
+
+    productReviews.unshift(newReview);
+    console.log(`[PRODUCT REVIEW SUBMITTED] User: ${userName} on Product ID: ${productId} with ${valRating} Stars.`);
+
+    return res.json({
+      success: true,
+      message: 'Thank you! Your verified product review has been submitted successfully.',
+      review: newReview
+    });
+  } catch (err: any) {
+    console.error('Submit review error:', err);
+    return res.status(500).json({ error: 'Server error saving product review.' });
+  }
+});
+
+// 9. Fetch all reviews (secured admin portal view)
+app.get('/api/admin/reviews', adminAuthMiddleware, (req, res) => {
+  return res.json({
+    success: true,
+    reviews: productReviews
+  });
+});
+
+// 10. Admin delete a review (secured admin portal endpoint)
+app.delete('/api/admin/reviews/:id', adminAuthMiddleware, (req, res) => {
+  try {
+    const { id } = req.params;
+    const preLength = productReviews.length;
+    productReviews = productReviews.filter(rev => rev.id !== id);
+    if (productReviews.length === preLength) {
+      return res.status(404).json({ error: 'Review log not found or already deleted.' });
+    }
+    return res.json({ success: true, message: 'Review successfully removed by administrative staff.' });
+  } catch (err) {
+    console.error('Admin delete review error:', err);
+    return res.status(500).json({ error: 'Server error deleting product review.' });
   }
 });
 

@@ -135,6 +135,28 @@ export default function Header() {
               </AnimatePresence>
             </button>
 
+            {/* E-commerce Compare Icon */}
+            <button
+              onClick={() => setIsCompareOpen(true)}
+              className="relative p-2.5 rounded-xl border border-white/5 bg-white/4 hover:bg-white/10 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center"
+              title="Compare Specifications side-by-side"
+              aria-label="Toggle Compare Modal"
+            >
+              <GitCompare className={`w-5 h-5 ${compareList.length > 0 ? "text-blue-400 rotate-180" : "text-slate-400"}`} />
+              <AnimatePresence>
+                {compareList.length > 0 && (
+                  <motion.span
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gradient-to-tr from-blue-500 to-indigo-600 text-white rounded-full text-[10px] font-mono font-bold flex items-center justify-center animate-pulse"
+                  >
+                    {compareList.length}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </button>
+
             {/* E-commerce Cart Icon */}
             <button
               onClick={() => setIsCartOpen(true)}
@@ -248,6 +270,20 @@ export default function Header() {
               {wishlist.length > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-pink-500 text-white rounded-full text-[9px] font-mono font-bold flex items-center justify-center">
                   {wishlist.length}
+                </span>
+              )}
+            </button>
+
+            {/* Mobile Compare trigger */}
+            <button
+              onClick={() => setIsCompareOpen(true)}
+              className="relative p-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center"
+              aria-label="Mobile Compare Modal"
+            >
+              <GitCompare className={`w-4.5 h-4.5 ${compareList.length > 0 ? "text-blue-400 rotate-180" : "text-slate-400"}`} />
+              {compareList.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white rounded-full text-[9px] font-mono font-bold flex items-center justify-center">
+                  {compareList.length}
                 </span>
               )}
             </button>

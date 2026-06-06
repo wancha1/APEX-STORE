@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { BUSINESS_INFO, SERVICES } from "../data";
 import { useCart } from "../context/CartContext";
 import {
@@ -22,7 +23,13 @@ import {
   Bookmark,
   ChevronLeft,
   ChevronRight,
-  SlidersHorizontal
+  SlidersHorizontal,
+  GitCompare,
+  Bell,
+  MessageSquare,
+  TrendingDown,
+  Send,
+  ThumbsUp
 } from "lucide-react";
 
 // Icon components mapping helper
@@ -89,8 +96,77 @@ export default function Services() {
     isProductsLoading,
     setIsCartOpen,
     toggleLike,
-    isLiked
+    isLiked,
+    compareList,
+    toggleCompare,
+    isInCompare,
+    clearCompare,
+    isCompareOpen,
+    setIsCompareOpen
   } = useCart();
+
+  // Restock notify subscription inputs
+  const [isNotifyModalOpen, setIsNotifyModalOpen] = useState(false);
+  const [notifyProduct, setNotifyProduct] = useState<any | null>(null);
+  const [notifyName, setNotifyName] = useState("");
+  const [notifyEmail, setNotifyEmail] = useState("");
+  const [notifyPhone, setNotifyPhone] = useState("");
+  const [isSubmittingNotify, setIsSubmittingNotify] = useState(false);
+  const [notifySuccessMsg, setNotifySuccessMsg] = useState("");
+  const [notifyErrorMsg, setNotifyErrorMsg] = useState("");
+
+  const handleOpenNotifyMe = (product: any) => {
+    setNotifyProduct(product);
+    setNotifyName("");
+    setNotifyEmail("");
+    setNotifyPhone("");
+    setNotifySuccessMsg("");
+    setNotifyErrorMsg("");
+    setIsNotifyModalOpen(true);
+  };
+
+  const handleNotifySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!notifyProduct || !notifyName || !notifyEmail) {
+      setNotifyErrorMsg("Please fill out all required fields (Name and Email address).");
+      return;
+    }
+
+    try {
+      setIsSubmittingNotify(true);
+      setNotifyErrorMsg("");
+      setNotifySuccessMsg("");
+
+      const response = await fetch("/api/notify-restock", {
+         method: "POST",
+         headers: {
+           "Content-Type": "application/json"
+         },
+         body: JSON.stringify({
+           productId: notifyProduct.id,
+           productName: notifyProduct.name,
+           name: notifyName,
+           email: notifyEmail,
+           phone: notifyPhone
+         })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to submit restock alert subscription.");
+      }
+
+      setNotifySuccessMsg(`You have been registered successfully! We'll send an email alert to ${notifyEmail} once ${notifyProduct.name} is restocked in Lira!`);
+      setNotifyName("");
+      setNotifyEmail("");
+      setNotifyPhone("");
+    } catch (err: any) {
+      console.error("Restock notify fetch error:", err);
+      setNotifyErrorMsg(err.message || "An error occurred with restock alert signup. Please try again.");
+    } finally {
+      setIsSubmittingNotify(false);
+    }
+  };
 
   // Midnight Countdown
   const [countdown, setCountdown] = useState({ hours: 4, minutes: 12, seconds: 45 });
@@ -129,10 +205,146 @@ export default function Services() {
 
   // Quick View Angle selections state inside Specification Sheet Modal
   const [activeAngleIndex, setActiveAngleIndex] = useState(0);
+
+  // Custom Product Reviews, Star Ratings & Comments states
+  const [reviewsList, setReviewsList] = useState<any[]>([]);
+  const [isLoadingReviewsList, setIsLoadingReviewsList] = useState(false);
+  const [reviewName, setReviewName] = useState("");
+  const [reviewEmail, setReviewEmail] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewSuccessMsg, setReviewSuccessMsg] = useState("");
+  const [reviewErrorMsg, setReviewErrorMsg] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  // Price tracking subscription states
+  const [priceTrackName, setPriceTrackName] = useState("");
+  const [priceTrackEmail, setPriceTrackEmail] = useState("");
+  const [priceTrackPrice, setPriceTrackPrice] = useState("");
+  const [priceTrackSuccessMsg, setPriceTrackSuccessMsg] = useState("");
+  const [priceTrackErrorMsg, setPriceTrackErrorMsg] = useState("");
+  const [isSubmittingPriceTrack, setIsSubmittingPriceTrack] = useState(false);
+
+  // Synchronized state fetch effect for active product detail loads
   useEffect(() => {
     setActiveAngleIndex(0);
     setMediaMode("image");
+
+    if (selectedQuickViewProduct) {
+      setReviewName("");
+      setReviewEmail("");
+      setReviewRating(5);
+      setReviewComment("");
+      setReviewSuccessMsg("");
+      setReviewErrorMsg("");
+      
+      setPriceTrackName("");
+      setPriceTrackEmail("");
+      // pre-suggest 5% price drop target threshold formatted as integer
+      setPriceTrackPrice(Math.round(selectedQuickViewProduct.price * 0.95).toString());
+      setPriceTrackSuccessMsg("");
+      setPriceTrackErrorMsg("");
+
+      const fetchProductReviews = async () => {
+        try {
+          setIsLoadingReviewsList(true);
+          const response = await fetch(`/api/products/${selectedQuickViewProduct.id}/reviews`);
+          if (response.ok) {
+            const data = await response.json();
+            setReviewsList(data.reviews || []);
+          }
+        } catch (err) {
+          console.error("Error loading reviews list:", err);
+        } finally {
+          setIsLoadingReviewsList(false);
+        }
+      };
+      fetchProductReviews();
+    }
   }, [selectedQuickViewProduct]);
+
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedQuickViewProduct) return;
+    if (!reviewName.trim() || !reviewEmail.trim() || !reviewComment.trim()) {
+      setReviewErrorMsg("Please fill out your name, email address, and review details.");
+      return;
+    }
+    
+    try {
+      setIsSubmittingReview(true);
+      setReviewErrorMsg("");
+      setReviewSuccessMsg("");
+
+      const response = await fetch(`/api/products/${selectedQuickViewProduct.id}/reviews`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userName: reviewName.trim(),
+          userEmail: reviewEmail.trim(),
+          rating: Number(reviewRating),
+          comment: reviewComment.trim()
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to submit your product review.");
+      }
+
+      setReviewSuccessMsg("Thank you! Your verified product review has been submitted successfully.");
+      setReviewComment("");
+      
+      // prepend the new review to local state
+      setReviewsList(prev => [data.review, ...prev]);
+    } catch (err: any) {
+      setReviewErrorMsg(err.message || "An error occurred submitting your review.");
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
+  const handlePriceTrackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedQuickViewProduct) return;
+    if (!priceTrackName.trim() || !priceTrackEmail.trim() || !priceTrackPrice) {
+      setPriceTrackErrorMsg("Please supply your name, email, and target drop-budget ceiling.");
+      return;
+    }
+
+    try {
+      setIsSubmittingPriceTrack(true);
+      setPriceTrackErrorMsg("");
+      setPriceTrackSuccessMsg("");
+
+      const response = await fetch(`/api/notify-price-drop`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: selectedQuickViewProduct.id,
+          productName: selectedQuickViewProduct.name,
+          name: priceTrackName.trim(),
+          email: priceTrackEmail.trim(),
+          targetPrice: Number(priceTrackPrice),
+          currentPrice: selectedQuickViewProduct.price
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to subscribe to price-drop alert tracker.");
+      }
+
+      setPriceTrackSuccessMsg(`Successfully registered! You'll receive emails at ${priceTrackEmail.trim()} once the price reaches UGX ${Number(priceTrackPrice).toLocaleString()} or lower!`);
+      setPriceTrackName("");
+      setPriceTrackEmail("");
+      setPriceTrackPrice("");
+    } catch (err: any) {
+      setPriceTrackErrorMsg(err.message || "An error occurred while creating budget alert filter.");
+    } finally {
+      setIsSubmittingPriceTrack(false);
+    }
+  };
 
   // Construct dynamic angle variations for selected product specs sheet
   const angleSlides = useMemo(() => {
@@ -521,9 +733,11 @@ Please assign a tech concierge to review stock and delivery schedules at my conv
                       <span className={`absolute bottom-4 right-4 text-[9px] font-mono tracking-widest uppercase font-semibold px-3 py-1 rounded-xl border backdrop-blur-md ${
                         product.stockStatus === "In Stock"
                           ? "bg-black/60 border-emerald-500/20 text-emerald-400"
-                          : "bg-black/60 border-purple-500/20 text-purple-400"
+                          : product.stockStatus === "Low Stock"
+                          ? "bg-black/60 border-amber-500/20 text-amber-450 text-amber-400"
+                          : "bg-black/60 border-rose-500/25 text-rose-400 bg-rose-950/15"
                       }`}>
-                        {product.stockStatus === "In Stock" ? "In Stock" : "Limited Stock"}
+                        {product.stockStatus}
                       </span>
 
                       {/* Promo Badging if active */}
@@ -535,7 +749,7 @@ Please assign a tech concierge to review stock and delivery schedules at my conv
 
                       {/* Top-Right Premium Interactive Action Row */}
                       <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5">
-                        {/* Functional Like Button (Independent of Wishlist) */}
+                        {/* Functional Unlike / Like Button */}
                         <button
                           type="button"
                           onClick={(e) => {
@@ -567,6 +781,23 @@ Please assign a tech concierge to review stock and delivery schedules at my conv
                           title={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
                         >
                           <Bookmark className={`w-3.5 h-3.5 transition-transform duration-300 ${isInWishlist(product.id) ? "fill-pink-500 scale-110 text-pink-500" : ""}`} />
+                        </button>
+
+                        {/* Functional Compare Toggle Button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleCompare(product);
+                          }}
+                          className={`w-8.5 h-8.5 rounded-full flex items-center justify-center border backdrop-blur-md active:scale-90 transition-all cursor-pointer ${
+                            isInCompare(product.id)
+                              ? "bg-blue-500/25 border-blue-500/40 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.15)] bg-slate-900/40"
+                              : "bg-black/50 border-white/5 text-white/80 hover:text-white hover:bg-black/75 hover:border-white/20"
+                          }`}
+                          title={isInCompare(product.id) ? "Remove from Compare" : "Compare details side-by-side"}
+                        >
+                          <GitCompare className={`w-3.5 h-3.5 transition-transform duration-300 ${isInCompare(product.id) ? "rotate-180 scale-110 text-blue-400" : ""}`} />
                         </button>
                       </div>
                     </div>
@@ -619,17 +850,30 @@ Please assign a tech concierge to review stock and delivery schedules at my conv
                     </div>
 
                     {/* Single unified interactive trigger CTA */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addToCart(product);
-                        setIsCartOpen(true);
-                      }}
-                      className="w-full py-3.5 px-4 rounded-xl font-bold text-xs tracking-wider uppercase bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white border border-blue-500/25 hover:border-blue-500/40 transition-all cursor-pointer flex items-center justify-center gap-2 group-hover:scale-[1.01] shadow-md shadow-blue-500/10"
-                    >
-                      <ShoppingBag className="w-3.5 h-3.5 text-white" />
-                      <span>Add to Cart</span>
-                    </button>
+                    {product.stockStatus === "Out of Stock" ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenNotifyMe(product);
+                        }}
+                        className="w-full py-3.5 px-4 rounded-xl font-bold text-xs tracking-wider uppercase bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border border-amber-500/25 hover:border-amber-550/40 hover:scale-[1.01] transition-all cursor-pointer flex items-center justify-center gap-2 shadow-md shadow-amber-500/10 animate-border-pulse"
+                      >
+                        <Bell className="w-3.5 h-3.5 text-white animate-bounce" />
+                        <span>Notify Me</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart(product);
+                          setIsCartOpen(true);
+                        }}
+                        className="w-full py-3.5 px-4 rounded-xl font-bold text-xs tracking-wider uppercase bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white border border-blue-500/25 hover:border-blue-500/40 transition-all cursor-pointer flex items-center justify-center gap-2 group-hover:scale-[1.01] shadow-md shadow-blue-500/10"
+                      >
+                        <ShoppingBag className="w-3.5 h-3.5 text-white" />
+                        <span>Add to Cart</span>
+                      </button>
+                    )}
                   </div>
 
                 </div>
@@ -1197,6 +1441,249 @@ Please assign a tech concierge to review stock and delivery schedules at my conv
 
             </div>
 
+            {/* COMPREHENSIVE TRUST & BUDGET INTERACTION CORE SUITE */}
+            <div className="mt-12 pt-10 border-t border-white/10 space-y-12 animate-fade-in text-left" id="showroom-engagement-suite-box">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                
+                {/* LHS (col-span-7): DETAILED REVIEW FEEDBACK SYSTEM */}
+                <div className="lg:col-span-7 space-y-6">
+                  <div>
+                    <h4 className="text-sm font-mono font-black text-white uppercase tracking-wider flex items-center gap-2" id="showroom-reviews-verification-title">
+                      <MessageSquare className="w-4 h-4 text-sky-400" /> Showroom Reviews & Verifications
+                    </h4>
+                    <p className="text-[11px] text-slate-400 font-light mt-1">
+                      See actual user reports from active customers on {selectedQuickViewProduct.name} setups in Uganda.
+                    </p>
+                  </div>
+
+                  {/* Submit Review collapsible form card */}
+                  <form onSubmit={handleReviewSubmit} className="bg-white/3 border border-white/5 rounded-2xl p-5 space-y-4" id="submit-review-form">
+                    <span className="text-[10px] font-mono text-emerald-400 uppercase font-bold tracking-wider block">✍ Add Your Feedback & Rating</span>
+                    
+                    {reviewSuccessMsg && (
+                      <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl font-medium" id="review-success-panel">
+                        ✓ {reviewSuccessMsg}
+                      </div>
+                    )}
+                    {reviewErrorMsg && (
+                      <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl font-mono" id="review-error-panel">
+                        ✕ {reviewErrorMsg}
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label htmlFor="review-name-input-field" className="text-[9px] font-mono text-slate-500 font-bold block mb-1">Your Full Name:</label>
+                        <input
+                          id="review-name-input-field"
+                          type="text"
+                          required
+                          value={reviewName}
+                          onChange={(e) => setReviewName(e.target.value)}
+                          placeholder="e.g. Ojok Douglas"
+                          className="w-full text-xs bg-black/40 border border-white/10 hover:border-white/20 focus:border-sky-500 rounded-xl px-3 py-2 text-white h-9 focus:outline-none transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="review-email-input-field" className="text-[9px] font-mono text-slate-500 font-bold block mb-1">Your Email Contact:</label>
+                        <input
+                          id="review-email-input-field"
+                          type="email"
+                          required
+                          value={reviewEmail}
+                          onChange={(e) => setReviewEmail(e.target.value)}
+                          placeholder="e.g. douglas@gmail.com"
+                          className="w-full text-xs bg-black/40 border border-white/10 hover:border-white/20 focus:border-sky-500 rounded-xl px-3 py-2 text-white h-9 focus:outline-none transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-[9px] font-mono text-slate-500 font-bold block mb-1">Assign Star Rating Score:</span>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((starIdx) => (
+                          <button
+                            key={starIdx}
+                            type="button"
+                            onClick={() => setReviewRating(starIdx)}
+                            className="p-1 cursor-pointer hover:scale-110 active:scale-95 transition-all outline-none"
+                            title={`${starIdx} Stars`}
+                            id={`star-btn-rate-${starIdx}`}
+                          >
+                            <Star
+                              className={`w-5 h-5 ${
+                                starIdx <= reviewRating ? "text-amber-400 fill-amber-400" : "text-white/10"
+                              }`}
+                            />
+                          </button>
+                        ))}
+                        <span className="text-[10px] font-mono text-slate-400 ml-2 self-center">({reviewRating}/5 Stars)</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="review-comment-input-area" className="text-[9px] font-mono text-slate-500 font-bold block mb-1">Your Review Comment:</label>
+                      <textarea
+                        id="review-comment-input-area"
+                        required
+                        value={reviewComment}
+                        onChange={(e) => setReviewComment(e.target.value)}
+                        placeholder="Share your setup configurations, gaming experience, audio caliber, or delivery feedback on the road to Obote Avenue..."
+                        rows={3}
+                        className="w-full text-xs bg-black/40 border border-white/10 hover:border-white/20 focus:border-sky-500 rounded-xl p-3 text-white focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isSubmittingReview}
+                      className="w-full py-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold text-xs rounded-xl active:scale-95 transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      id="submit-review-action-btn"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>{isSubmittingReview ? "Submitting Review..." : "Submit Verified Review"}</span>
+                    </button>
+                  </form>
+
+                  {/* Reviews List Feed */}
+                  <div className="space-y-3.5 max-h-[350px] overflow-y-auto pr-2 scrollbar-thin" id="showroom-reviews-list-scrollpanel">
+                    {isLoadingReviewsList ? (
+                      <div className="text-center py-6 text-slate-500 text-xs font-mono animate-pulse">Syncing user feedback...</div>
+                    ) : reviewsList.length === 0 ? (
+                      <div className="text-center py-8 rounded-2xl bg-white/2 border border-dashed border-white/5">
+                        <p className="text-xs text-slate-500 italic block">No feedback published yet for this hardware version. Be the first to register a comment!</p>
+                      </div>
+                    ) : (
+                      reviewsList.map((rev: any, idx: number) => (
+                        <div key={rev.id || idx} className="bg-[#050508] border border-white/5 rounded-2xl p-4 space-y-2 relative" id={`user-review-card-${idx}`}>
+                          <div className="flex justify-between items-start gap-4">
+                            <div>
+                              <div className="font-bold text-slate-200 text-xs">{rev.userName}</div>
+                              <div className="text-[9px] text-slate-500 font-mono">Verified Customer</div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {Array.from({ length: 5 }).map((_, s) => (
+                                <Star
+                                  key={s}
+                                  className={`w-3 h-3 ${
+                                    s < rev.rating ? "text-amber-500 fill-amber-500" : "text-slate-800"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-xs text-slate-300 font-sans italic font-light leading-relaxed">
+                            "{rev.comment}"
+                          </p>
+                          <div className="text-[8px] text-slate-500 font-mono text-right">
+                            {new Date(rev.timestamp || Date.now()).toLocaleDateString()}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* RHS (col-span-5): PRICE DROP ALERT ACTIVATOR */}
+                <div className="lg:col-span-5 space-y-6">
+                  <div className="bg-gradient-to-b from-[#101025] to-[#04040a] border border-blue-500/15 rounded-[2rem] p-6 space-y-6 relative overflow-hidden" id="price-track-container-block">
+                    {/* Background glows */}
+                    <div className="absolute right-0 top-0 -translate-y-12 translate-x-12 w-28 h-28 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
+                    
+                    <div className="space-y-1.5 relative">
+                      <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4 shadow">
+                        <TrendingDown className="w-5 h-5 animate-pulse" />
+                      </div>
+                      <h4 className="text-xs font-mono font-black text-blue-400 uppercase tracking-widest flex items-center gap-1.5" id="price-track-title">
+                        <Bell className="w-3.5 h-3.5 animate-bounce" /> Budget Drop Alert Tracker
+                      </h4>
+                      <p className="text-[10px] text-slate-400 font-light leading-normal">
+                        Submit your custom trigger budget below. We run continuous catalogs against our showroom inventory and will send you a prompt email notice once the price drops!
+                      </p>
+                    </div>
+
+                    <form onSubmit={handlePriceTrackSubmit} className="space-y-4 relative" id="price-track-register-form">
+                      {priceTrackSuccessMsg && (
+                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] rounded-xl font-normal leading-normal" id="price-track-success-panel">
+                          ✓ {priceTrackSuccessMsg}
+                        </div>
+                      )}
+                      {priceTrackErrorMsg && (
+                        <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl font-mono" id="price-track-error-panel">
+                          ✕ {priceTrackErrorMsg}
+                        </div>
+                      )}
+
+                      <div className="space-y-3 font-mono">
+                        <div>
+                          <label htmlFor="price-track-name" className="text-[9px] text-slate-500 font-bold block mb-1">My Full Name:</label>
+                          <input
+                            id="price-track-name"
+                            type="text"
+                            required
+                            value={priceTrackName}
+                            onChange={(e) => setPriceTrackName(e.target.value)}
+                            placeholder="e.g. Auma Sharon"
+                            className="w-full text-xs bg-black/50 border border-white/5 hover:border-white/10 rounded-xl px-3 py-2 text-white h-9 focus:outline-none focus:border-blue-500 transition-colors"
+                          />
+                        </div>
+
+                        <div>
+                          <label htmlFor="price-track-email" className="text-[9px] text-slate-500 font-bold block mb-1">Send Alert To (Email):</label>
+                          <input
+                            id="price-track-email"
+                            type="email"
+                            required
+                            value={priceTrackEmail}
+                            onChange={(e) => setPriceTrackEmail(e.target.value)}
+                            placeholder="sharon@outlook.com"
+                            className="w-full text-xs bg-black/50 border border-white/5 hover:border-white/10 rounded-xl px-3 py-2 text-white h-9 focus:outline-none focus:border-blue-500 transition-colors"
+                          />
+                        </div>
+
+                        <div>
+                          <label htmlFor="price-track-target" className="text-[9px] text-slate-500 font-bold block mb-1">My Target Price (UGX):</label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-2.5 text-[9px] text-slate-500 font-bold">UGX</span>
+                            <input
+                              id="price-track-target"
+                              type="number"
+                              required
+                              value={priceTrackPrice}
+                              onChange={(e) => setPriceTrackPrice(e.target.value)}
+                              placeholder="e.g. 6200000"
+                              className="w-full text-xs bg-black/50 border border-white/5 hover:border-white/10 rounded-xl pl-11 pr-3 py-2 text-white h-9 focus:outline-none focus:border-emerald-500 font-mono transition-colors font-bold"
+                            />
+                          </div>
+                          <span className="text-[8px] text-slate-500 mt-1 block">
+                            Showroom original: {formatCurrency(selectedQuickViewProduct.price)} (Recommended budget target shown)
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isSubmittingPriceTrack}
+                        className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-xs uppercase tracking-wider rounded-xl hover:scale-[1.01] active:scale-95 transition-all text-center flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
+                        id="price-track-action-submit-btn"
+                      >
+                        <Bell className="w-3.5 h-3.5 shrink-0" />
+                        <span>{isSubmittingPriceTrack ? "Activating alert..." : "Set Price drop tracker"}</span>
+                      </button>
+                    </form>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-white/2 border border-white/5 text-[10px] text-slate-400 font-light flex gap-3 leading-relaxed" id="price-track-security-badge">
+                    <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+                    <span>
+                      We strictly protect your communication bounds under Lira City data integrity acts. Your address is only stored privately on our memory registers to trigger automatic catalog pricing drop emails.
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
             {/* Highly Polished Fullscreen Image Preview overlay */}
             {isFullscreenPreviewOpen && mediaMode === "image" && (
               <div 
@@ -1230,6 +1717,167 @@ Please assign a tech concierge to review stock and delivery schedules at my conv
           </div>
         </div>
       )}
+
+      {/* 4. Restock 'Notify Me' Modal Overlay */}
+      <AnimatePresence>
+        {isNotifyModalOpen && notifyProduct && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.85 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsNotifyModalOpen(false)}
+              className="absolute inset-0 bg-[#020205]/90 backdrop-blur-md cursor-pointer"
+            />
+
+            {/* Modal Box */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-md bg-[#05050c] border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl z-10 p-6 sm:p-8 flex flex-col"
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-white/5 mb-5 text-left">
+                <div className="text-left">
+                  <span className="text-[9px] bg-amber-500/10 text-amber-400 border border-amber-500/10 px-2.5 py-0.5 rounded font-mono uppercase font-bold tracking-widest">
+                    RESTOCK ALERTS
+                  </span>
+                  <h3 className="font-display font-black text-lg sm:text-xl text-white mt-1">
+                    Get Restock Notification
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setIsNotifyModalOpen(false)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {notifySuccessMsg ? (
+                <div className="py-6 text-center space-y-4">
+                  <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+                    ✓
+                  </div>
+                  <p className="text-sm text-slate-300 font-sans leading-relaxed">
+                    {notifySuccessMsg}
+                  </p>
+                  <button
+                    onClick={() => setIsNotifyModalOpen(false)}
+                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-transform cursor-pointer"
+                  >
+                    Dismiss View
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleNotifySubmit} className="space-y-4 text-left">
+                  <div className="flex items-center gap-3 bg-white/3 border border-white/5 rounded-2xl p-3 mb-2">
+                    <img
+                      src={getProductImageUrl(notifyProduct)}
+                      alt={notifyProduct.name}
+                      referrerPolicy="no-referrer"
+                      className="w-12 h-12 object-cover rounded-xl border border-white/5 shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest">{notifyProduct.category}</span>
+                      <h4 className="text-xs font-sans text-white font-bold truncate leading-tight mt-0.5">{notifyProduct.name}</h4>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-slate-400 leading-relaxed font-sans mt-1">
+                    Enter your contact information below. We will save your restock criteria and dispatch a priority email notice once new manufacturer seals land at our showroom floor in Lira, Uganda.
+                  </p>
+
+                  {notifyErrorMsg && (
+                    <div className="text-xs text-red-400 bg-red-500/5 border border-red-500/10 p-2.5 rounded-lg font-sans">
+                      ⚠️ {notifyErrorMsg}
+                    </div>
+                  )}
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-slate-400 uppercase font-bold tracking-wide block">Full Name <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      required
+                      value={notifyName}
+                      onChange={(e) => setNotifyName(e.target.value)}
+                      placeholder="Jane Doe"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-slate-400 uppercase font-bold tracking-wide block">Email Address <span className="text-red-500">*</span></label>
+                    <input
+                      type="email"
+                      required
+                      value={notifyEmail}
+                      onChange={(e) => setNotifyEmail(e.target.value)}
+                      placeholder="jane.doe@example.com"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-slate-400 uppercase font-bold tracking-wide block">Phone Number (Optional)</label>
+                    <input
+                      type="text"
+                      value={notifyPhone}
+                      onChange={(e) => setNotifyPhone(e.target.value)}
+                      placeholder="+256 701 123 456"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmittingNotify}
+                    className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl cursor-pointer transition-colors active:scale-98 disabled:opacity-55"
+                  >
+                    {isSubmittingNotify ? "Submitting Request..." : "Activate priority restock notice"}
+                  </button>
+                </form>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 5. Quick Compare Sticky Float Overlay */}
+      <AnimatePresence>
+        {compareList.length > 0 && (
+          <motion.div
+            initial={{ y: 80, opacity: 0, x: "-50%" }}
+            animate={{ y: 0, opacity: 1, x: "-50%" }}
+            exit={{ y: 80, opacity: 0, x: "-50%" }}
+            className="fixed bottom-6 left-1/2 z-40 w-[92%] max-w-xl bg-[#060613]/95 backdrop-blur-md border border-blue-500/25 shadow-[0_10px_40px_rgba(59,130,246,0.2)] rounded-[1.8rem] px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 select-none"
+          >
+            <div className="text-left">
+              <span className="text-[8px] font-mono text-blue-400 uppercase font-black tracking-widest block mb-0.5">
+                Technical Benchmark Compare
+              </span>
+              <p className="text-xs font-sans text-slate-300">
+                You have selected <strong className="text-white font-bold font-mono">{compareList.length}</strong> product{compareList.length > 1 ? "s" : ""} to compare specs side-by-side.
+              </p>
+            </div>
+            <div className="flex gap-2.5 shrink-0 w-full sm:w-auto">
+              <button
+                onClick={clearCompare}
+                className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all text-xs font-bold uppercase font-mono cursor-pointer"
+              >
+                Clear
+              </button>
+              <button
+                onClick={() => setIsCompareOpen(true)}
+                className="flex-1 sm:flex-initial px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold uppercase font-mono text-xs cursor-pointer shadow-lg shadow-blue-500/20"
+              >
+                Compare Now
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

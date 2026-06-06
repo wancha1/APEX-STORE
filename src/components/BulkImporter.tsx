@@ -44,7 +44,9 @@ import {
   AlertTriangle,
   Settings,
   History,
-  Check
+  Check,
+  Star,
+  TrendingDown
 } from "lucide-react";
 
 export default function BulkImporter() {
@@ -123,6 +125,156 @@ export default function BulkImporter() {
   const [previewSkippedRows, setPreviewSkippedRows] = useState<SyncLogEntry["failedRows"]>([]);
   const [previewCounts, setPreviewCounts] = useState<{ addedCount: number; updatedCount: number; skippedCount: number } | null>(null);
   const [viewLogDetail, setViewLogDetail] = useState<SyncLogEntry | null>(null);
+
+  // Admin Restock Alert subscription state bindings
+  const [restockSubscriptions, setRestockSubscriptions] = useState<any[]>([]);
+  const [isFetchingAlerts, setIsFetchingAlerts] = useState(false);
+  const [reloadingAlerts, setReloadingAlerts] = useState(false);
+  const [alertsAdminTab, setAlertsAdminTab] = useState<"restock" | "pricedrop" | "reviews">("restock");
+
+  // Admin Price Drop and Product Reviews bindings
+  const [priceDropSubscriptions, setPriceDropSubscriptions] = useState<any[]>([]);
+  const [isFetchingPriceDrops, setIsFetchingPriceDrops] = useState(false);
+  const [showroomReviews, setShowroomReviews] = useState<any[]>([]);
+  const [isFetchingReviews, setIsFetchingReviews] = useState(false);
+
+  const fetchPriceDropSubscriptions = async () => {
+    try {
+      setIsFetchingPriceDrops(true);
+      const res = await fetch("/api/admin/price-drop-subscriptions", {
+        headers: { "X-CSRF-Token": csrfToken || "" },
+        credentials: "include"
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPriceDropSubscriptions(data.subscriptions || []);
+      }
+    } catch (err) {
+      console.error("Error fetching admin price drop logs:", err);
+    } finally {
+      setIsFetchingPriceDrops(false);
+    }
+  };
+
+  const fetchShowroomReviews = async () => {
+    try {
+      setIsFetchingReviews(true);
+      const res = await fetch("/api/admin/reviews", {
+        headers: { "X-CSRF-Token": csrfToken || "" },
+        credentials: "include"
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setShowroomReviews(data.reviews || []);
+      }
+    } catch (err) {
+      console.error("Error fetching admin reviews list:", err);
+    } finally {
+      setIsFetchingReviews(false);
+    }
+  };
+
+  const triggerPriceDropRelease = async (subscriptionId: string) => {
+    if (!window.confirm("Are you sure you want to trigger manual release and dispatch simulation emails to this user address?")) return;
+    try {
+      const res = await fetch("/api/admin/price-drop-release", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken || ""
+        },
+        body: JSON.stringify({ subscriptionId }),
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to release price drop alert.");
+      alert(`Success! Simulated email notice dispatched to subscriber!`);
+      await fetchPriceDropSubscriptions();
+    } catch (err: any) {
+      alert(`Price drop release failed: ${err.message}`);
+    }
+  };
+
+  const triggerDeleteReview = async (reviewId: string) => {
+    if (!window.confirm("Are you sure you want to administratively delete this verified customer review?")) return;
+    try {
+      const res = await fetch(`/api/admin/reviews/${reviewId}`, {
+        method: "DELETE",
+        headers: { "X-CSRF-Token": csrfToken || "" },
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete review.");
+      alert(`Success! Review removed successfully.`);
+      await fetchShowroomReviews();
+    } catch (err: any) {
+      alert(`Could not delete review: ${err.message}`);
+    }
+  };
+
+  const fetchRestockSubscriptions = async () => {
+    try {
+      setIsFetchingAlerts(true);
+      const res = await fetch("/api/admin/notify-subscriptions", {
+        headers: {
+          "X-CSRF-Token": csrfToken || ""
+        },
+        credentials: "include"
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.subscriptions) {
+          setRestockSubscriptions(data.subscriptions);
+        } else {
+          setRestockSubscriptions(data || []);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching restock records:", err);
+    } finally {
+      setIsFetchingAlerts(false);
+    }
+  };
+
+  const triggerRestockAlertRelease = async (productId: string) => {
+    if (!window.confirm("Are you sure you want to trigger product restock and dispatch automated simulated email alert notifications to all subscribers?")) return;
+    try {
+      setReloadingAlerts(true);
+      const res = await fetch("/api/admin/notify-release", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken || ""
+        },
+         body: JSON.stringify({ productId }),
+         credentials: "include"
+      });
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.error || "Failed to release restock.");
+      }
+      alert(`Success! Product has been marked as 'In Stock' in memory. Simulated email notices were dispatched successfully to ${resData.dispatchedCount} subscriber(s)!`);
+      
+      // Update local product state
+      if (products) {
+        setProducts((prev) =>
+          prev.map((p) => (p.id === productId ? { ...p, stockStatus: "In Stock" } : p))
+        );
+      }
+      // Re-fetch subscriptions
+      await fetchRestockSubscriptions();
+    } catch (err: any) {
+      alert(`RESTOCK RELEASE FAILED: ${err.message}`);
+    } finally {
+      setReloadingAlerts(false);
+    }
+  };
+
+  useEffect(() => {
+    if (adminUser) {
+      fetchRestockSubscriptions();
+    }
+  }, [adminUser]);
 
   // Persistence triggers
   useEffect(() => {
@@ -1311,6 +1463,23 @@ export default function BulkImporter() {
                       <span>CDN Media Hub</span>
                     </button>
                     <button
+                      id="tab-btn-restockalerts"
+                      onClick={() => {
+                        setActiveTab("restockAlerts" as any);
+                        fetchRestockSubscriptions();
+                        fetchPriceDropSubscriptions();
+                        fetchShowroomReviews();
+                      }}
+                      className={`px-4 py-2 text-xs font-bold font-sans rounded-xl transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center gap-1.5 ${
+                        activeTab === "restockAlerts"
+                          ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.35)] font-extrabold border border-emerald-400/20"
+                          : "text-amber-400 hover:text-white hover:bg-amber-500/10 hover:scale-[1.03] border border-amber-500/15"
+                      }`}
+                    >
+                      <History className="w-3.5 h-3.5 shrink-0" />
+                      <span>Restock Emails ({restockSubscriptions.length})</span>
+                    </button>
+                    <button
                       id="tab-btn-setup"
                       onClick={() => setActiveTab("setup")}
                       className={`px-4 py-2 text-xs font-bold font-sans rounded-xl transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center gap-1.5 ${
@@ -2400,6 +2569,324 @@ export default function BulkImporter() {
                         </div>
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {/* TAB CONTENT: RESTOCK ALERTS CONTROL PANEL */}
+                {activeTab === "restockAlerts" && (
+                  <div className="space-y-6">
+                    {/* Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <h5 className="text-xs font-mono font-black text-amber-400 uppercase tracking-widest flex items-center gap-1.5 animate-pulse">
+                          <History className="w-4 h-4" /> Admin User Signals & Alerts Tracker
+                        </h5>
+                        <p className="text-[10px] text-slate-400 font-light mt-1">
+                          Review what showroom subscribers are currently tracking or reporting.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            fetchRestockSubscriptions();
+                            fetchPriceDropSubscriptions();
+                            fetchShowroomReviews();
+                          }}
+                          disabled={isFetchingAlerts || isFetchingPriceDrops || isFetchingReviews}
+                          className="py-1.5 px-3 bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 rounded-xl text-xs font-bold text-slate-300 hover:text-white flex items-center gap-1.5 transition-all"
+                        >
+                          <RefreshCw className={`w-3.5 h-3.5 ${(isFetchingAlerts || isFetchingPriceDrops || isFetchingReviews) ? "animate-spin" : ""}`} />
+                          <span>Sync Live States</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Sub navigation bar */}
+                    <div className="flex flex-wrap gap-2 border-b border-white/10 pb-3">
+                      <button
+                        type="button"
+                        onClick={() => setAlertsAdminTab("restock")}
+                        className={`px-4 py-1.5 rounded-lg text-xs font-bold font-mono transition-all ${
+                          alertsAdminTab === "restock"
+                            ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                            : "text-slate-400 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        🔔 Stock Alerts ({restockSubscriptions.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAlertsAdminTab("pricedrop")}
+                        className={`px-4 py-1.5 rounded-lg text-xs font-bold font-mono transition-all ${
+                          alertsAdminTab === "pricedrop"
+                            ? "bg-sky-500/20 text-sky-400 border border-sky-500/30"
+                            : "text-slate-400 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        📉 Price Drops ({priceDropSubscriptions.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAlertsAdminTab("reviews")}
+                        className={`px-4 py-1.5 rounded-lg text-xs font-bold font-mono transition-all ${
+                          alertsAdminTab === "reviews"
+                            ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                            : "text-slate-400 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        💬 Reviews ({showroomReviews.length})
+                      </button>
+                    </div>
+
+                    {/* SUB-TAB 1: RESTOCK ALERTS LOGS */}
+                    {alertsAdminTab === "restock" && (
+                      <div className="bg-[#0a0a14] border border-white/10 rounded-3xl overflow-hidden shadow-xl">
+                        {restockSubscriptions.length === 0 ? (
+                          <div className="text-center py-16 px-4">
+                            <History className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                            <h6 className="text-sm font-bold text-slate-400">No Restock Alert Subscriptions Active</h6>
+                            <p className="text-xs text-slate-500 font-light max-w-sm mx-auto mt-1">
+                              When users visit out-of-stock items and click 'Notify Me', their details will populate this register.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                              <thead>
+                                <tr className="border-b border-white/5 bg-white/3 font-mono text-[10px] uppercase tracking-wider text-slate-400">
+                                  <th className="p-4 font-bold text-slate-400">Product / Model</th>
+                                  <th className="p-4 font-bold text-slate-400">Subscriber Contact</th>
+                                  <th className="p-4 font-bold text-slate-400">Registered On</th>
+                                  <th className="p-4 font-bold text-slate-400">Status</th>
+                                  <th className="p-4 font-bold text-slate-400 text-right">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-white/5 text-xs text-slate-300">
+                                {restockSubscriptions.map((sub: any, sIdx: number) => {
+                                  const targetProd = products.find(p => p.id === sub.productId);
+                                  const isOutOfStock = targetProd ? targetProd.stockStatus === "Out of Stock" : true;
+                                  return (
+                                    <tr key={sIdx} className="hover:bg-white/1">
+                                      <td className="p-4">
+                                        <div className="flex items-center gap-3">
+                                          {targetProd?.images && targetProd.images[0] ? (
+                                            <img
+                                              src={targetProd.images[0]}
+                                              alt={targetProd.name}
+                                              referrerPolicy="no-referrer"
+                                              className="w-8 h-8 rounded-lg object-contain bg-black/40 border border-white/5"
+                                            />
+                                          ) : (
+                                            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center font-mono text-[9px] text-slate-500">
+                                              N/A
+                                            </div>
+                                          )}
+                                          <div>
+                                            <div className="font-bold text-white leading-snug">{targetProd ? targetProd.name : sub.productName || "Unknown Hardware"}</div>
+                                            <div className="text-[10px] text-slate-500 font-mono">ID: {sub.productId}</div>
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td className="p-4">
+                                        <div className="font-medium text-slate-200">{sub.email}</div>
+                                        <div className="text-[10px] text-slate-400">{sub.name || "N/A"}</div>
+                                      </td>
+                                      <td className="p-4 font-mono text-slate-400">
+                                        {new Date(sub.timestamp || sub.createdAt || Date.now()).toLocaleString()}
+                                      </td>
+                                      <td className="p-4">
+                                        {!targetProd ? (
+                                          <span className="px-2 py-0.5 rounded text-[9px] font-bold font-mono border bg-slate-500/10 border-slate-500/20 text-slate-400">
+                                            DISCONTINUED
+                                          </span>
+                                        ) : isOutOfStock ? (
+                                          <span className="px-2 py-0.5 rounded text-[9px] font-bold font-mono border bg-rose-500/10 border-rose-500/20 text-rose-400 animate-pulse">
+                                            ⏳ PENDING RESTOCK
+                                          </span>
+                                        ) : (
+                                          <span className="px-2 py-0.5 rounded text-[9px] font-bold font-mono border bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
+                                            ✅ RESTOCKED
+                                          </span>
+                                        )}
+                                      </td>
+                                      <td className="p-4 text-right">
+                                        {targetProd && isOutOfStock ? (
+                                          <button
+                                            type="button"
+                                            onClick={() => triggerRestockAlertRelease(sub.productId)}
+                                            disabled={reloadingAlerts}
+                                            className="py-1 px-3 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 font-extrabold text-[10px] text-white rounded-lg active:scale-95 transition-all cursor-pointer shadow-md disabled:opacity-50"
+                                          >
+                                            🚀 Dispatch Restock Notice
+                                          </button>
+                                        ) : (
+                                          <span className="text-[10px] text-slate-500 italic font-light">Processed</span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* SUB-TAB 2: PRICE DROP TARGETS */}
+                    {alertsAdminTab === "pricedrop" && (
+                      <div className="bg-[#0a0a14] border border-white/10 rounded-3xl overflow-hidden shadow-xl">
+                        {priceDropSubscriptions.length === 0 ? (
+                          <div className="text-center py-16 px-4">
+                            <TrendingDown className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                            <h6 className="text-sm font-bold text-slate-400">No Price Drop Trackers Active</h6>
+                            <p className="text-xs text-slate-500 font-light max-w-sm mx-auto mt-1">
+                              When users set customer budget drop alerts under specification sheets, their entries display here.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                              <thead>
+                                <tr className="border-b border-white/5 bg-white/3 font-mono text-[10px] uppercase tracking-wider text-slate-400">
+                                  <th className="p-4 font-bold text-slate-400">Product Line / ID</th>
+                                  <th className="p-4 font-bold text-slate-400">Subscriber</th>
+                                  <th className="p-4 font-bold text-slate-400">Price Target Status</th>
+                                  <th className="p-4 font-bold text-slate-400">Registered On</th>
+                                  <th className="p-4 font-bold text-slate-400 text-right">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-white/5 text-xs text-slate-300">
+                                {priceDropSubscriptions.map((sub: any, sIdx: number) => {
+                                  const targetProd = products.find(p => p.id === sub.productId);
+                                  const currentPriceVal = targetProd ? targetProd.price : sub.currentPrice || 0;
+                                  const isSatisfied = currentPriceVal <= Number(sub.targetPrice);
+                                  return (
+                                    <tr key={sub.id || sIdx} className="hover:bg-white/1">
+                                      <td className="p-4">
+                                        <div className="font-bold text-white leading-snug">{sub.productName || "Unknown Hardware"}</div>
+                                        <div className="text-[10px] text-slate-500 font-mono">ID: {sub.productId}</div>
+                                      </td>
+                                      <td className="p-4">
+                                        <div className="font-medium text-slate-200">{sub.name}</div>
+                                        <div className="text-[10px] text-sky-400 font-mono">{sub.email}</div>
+                                      </td>
+                                      <td className="p-4">
+                                        <div className="text-xs font-bold text-slate-300">
+                                          Target: {Number(sub.targetPrice).toLocaleString()} UGX
+                                        </div>
+                                        <div className="text-[10px] text-slate-500 font-light mt-0.5">
+                                          Current Catalog: {currentPriceVal.toLocaleString()} UGX
+                                        </div>
+                                        {isSatisfied ? (
+                                          <span className="mt-1 inline-block px-2 py-0.5 rounded text-[9px] font-bold font-mono border bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
+                                            ✓ THRESHOLD MET
+                                          </span>
+                                        ) : (
+                                          <span className="mt-1 inline-block px-2 py-0.5 rounded text-[9px] font-bold font-mono border bg-purple-500/10 border-purple-500/20 text-purple-400 animate-pulse">
+                                            ⏳ WAITING FOR PRICE DROP
+                                          </span>
+                                        )}
+                                      </td>
+                                      <td className="p-4 font-mono text-slate-400 text-[11px]">
+                                        {new Date(sub.createdAt || Date.now()).toLocaleDateString()}
+                                      </td>
+                                      <td className="p-4 text-right">
+                                        {sub.status === 'notified' ? (
+                                          <span className="text-[10px] text-emerald-400 font-semibold italic">✓ Emailed / Notified</span>
+                                        ) : (
+                                          <button
+                                            type="button"
+                                            onClick={() => triggerPriceDropRelease(sub.id)}
+                                            className="px-2.5 py-1 bg-sky-500/10 hover:bg-sky-500 hover:text-white border border-sky-500/20 text-sky-400 text-[10px] font-mono font-bold rounded-lg transition-all"
+                                          >
+                                            🚀 Dispatch Simulation Notice
+                                          </button>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* SUB-TAB 3: REVIEWS MODERATION */}
+                    {alertsAdminTab === "reviews" && (
+                      <div className="bg-[#0a0a14] border border-white/10 rounded-3xl overflow-hidden shadow-xl">
+                        {showroomReviews.length === 0 ? (
+                          <div className="text-center py-16 px-4">
+                            <Star className="w-12 h-12 text-slate-600 mx-auto mb-3 text-purple-500" />
+                            <h6 className="text-sm font-bold text-slate-400">No Showroom Reviews Submitted</h6>
+                            <p className="text-xs text-slate-500 font-light max-w-sm mx-auto mt-1">
+                              When users write reviews under showroom items, their entries will display here for moderation.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                              <thead>
+                                <tr className="border-b border-white/5 bg-white/3 font-mono text-[10px] uppercase tracking-wider text-slate-400">
+                                  <th className="p-4 font-bold text-slate-400">Product / Rating</th>
+                                  <th className="p-4 font-bold text-slate-400">Customer Details</th>
+                                  <th className="p-4 font-bold text-slate-400">Review Text</th>
+                                  <th className="p-4 font-bold text-slate-400">Submitted</th>
+                                  <th className="p-4 font-bold text-slate-400 text-right">Moderations</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-white/5 text-xs text-slate-300">
+                                {showroomReviews.map((rev: any, rIdx: number) => {
+                                  const targetProd = products.find(p => p.id === rev.productId);
+                                  return (
+                                    <tr key={rev.id || rIdx} className="hover:bg-white/1">
+                                      <td className="p-4">
+                                        <div className="font-bold text-white max-w-[150px] truncate">{targetProd ? targetProd.name : rev.productId}</div>
+                                        <div className="flex items-center gap-1 mt-1">
+                                          {Array.from({ length: 5 }).map((_, s) => (
+                                            <Star
+                                              key={s}
+                                              className={`w-3 h-3 ${
+                                                s < rev.rating ? "text-amber-400 fill-amber-400" : "text-slate-800"
+                                              }`}
+                                            />
+                                          ))}
+                                        </div>
+                                      </td>
+                                      <td className="p-4">
+                                        <div className="font-bold text-slate-200">{rev.userName}</div>
+                                        <div className="text-[10px] text-slate-400 font-mono">{rev.userEmail}</div>
+                                      </td>
+                                      <td className="p-4 max-w-[280px]">
+                                        <p className="text-xs text-slate-300 italic font-light line-clamp-2">
+                                          "{rev.comment}"
+                                        </p>
+                                      </td>
+                                      <td className="p-4 font-mono text-slate-400 text-[10px]">
+                                        {new Date(rev.timestamp || Date.now()).toLocaleDateString()}
+                                      </td>
+                                      <td className="p-4 text-right">
+                                        <button
+                                          type="button"
+                                          onClick={() => triggerDeleteReview(rev.id)}
+                                          className="p-1 px-2.5 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/20 rounded-lg font-mono text-[10px] flex items-center gap-1 ml-auto transition-all"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                          <span>Delete Review</span>
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
