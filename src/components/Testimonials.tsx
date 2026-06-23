@@ -8,7 +8,7 @@ export default function Testimonials() {
   };
 
   return (
-    <section id="testimonials" className="py-24 relative overflow-hidden text-left bg-gray-50/30">
+    <section id="testimonials" className="py-24 relative overflow-hidden text-left bg-bg-primary">
       {/* Decorative center glow for testimonials */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/3 rounded-full blur-[160px] pointer-events-none" />
 
@@ -16,13 +16,13 @@ export default function Testimonials() {
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-xs uppercase font-mono tracking-widest text-[#8b5cf6] font-extrabold mb-3">
+          <h2 className="text-xs uppercase font-mono tracking-widest text-[#8b5cf6] dark:text-purple-400 font-extrabold mb-3">
             Real Customer Satisfaction
           </h2>
-          <h3 className="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold text-slate-900 tracking-tight mb-4 text-center">
+          <h3 className="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold text-slate-900 dark:text-white tracking-tight mb-4 text-center">
             Loved By Tech Enthusiasts Across Uganda
           </h3>
-          <p className="text-slate-600 font-light leading-relaxed text-center">
+          <p className="text-slate-600 dark:text-slate-300 font-light leading-relaxed text-center">
             See how {BUSINESS_INFO.name} has delivered authentic top-tier gadgets, verified brand warranties, and fast doorstep setups to local retail buyers and modern corporate offices.
           </p>
         </div>
@@ -32,38 +32,38 @@ export default function Testimonials() {
           {TESTIMONIALS.map((test, idx) => (
             <div
               key={idx}
-              className="bg-white border border-gray-150 rounded-[2rem] p-6 md:p-8 hover:shadow-md hover:border-gray-250 transition-all flex flex-col justify-between relative"
+              className="glass-panel glass-panel-hover rounded-[2rem] p-6 md:p-8 hover:shadow-md border border-gray-200/50 dark:border-white/5 flex flex-col justify-between relative"
             >
               {/* Quote Mark Design Accent */}
-              <Quote className="absolute top-6 right-6 w-8 h-8 text-gray-100 pointer-events-none" />
+              <Quote className="absolute top-6 right-6 w-8 h-8 text-gray-150/40 dark:text-white/5 pointer-events-none" />
 
               <div>
                 {/* Visual Stars */}
                 <div className="flex items-center gap-1 mb-5">
                   {[...Array(test.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 text-amber-500 fill-amber-500" />
+                     <Star key={i} className="w-4 h-4 text-amber-500 fill-amber-500" />
                   ))}
                 </div>
 
                 {/* Main Quote text */}
-                <p className="text-sm text-slate-600 font-light leading-relaxed italic mb-8">
+                <p className="text-sm text-slate-600 dark:text-slate-300 font-light leading-relaxed italic mb-8">
                   "{test.quote}"
                 </p>
               </div>
 
               {/* Author Footer */}
-              <div className="border-t border-gray-150 pt-5 flex items-center justify-between">
+              <div className="border-t border-gray-150/50 dark:border-white/5 pt-5 flex items-center justify-between">
                 <div className="text-left">
-                  <h5 className="font-display font-bold text-slate-900 text-sm">
+                  <h5 className="font-display font-bold text-slate-900 dark:text-white text-sm">
                     {test.name}
                   </h5>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    {test.role}, <span className="text-blue-600 font-medium">{test.company}</span>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    {test.role}, <span className="text-blue-600 dark:text-blue-400 font-medium">{test.company}</span>
                   </p>
                 </div>
                 
                 {/* Location Badge */}
-                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200 shrink-0 select-none">
+                <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-gray-50/50 dark:bg-slate-900/60 px-2.5 py-1 rounded-lg border border-gray-200/50 dark:border-white/5 shrink-0 select-none">
                   {test.location}
                 </span>
               </div>
@@ -72,11 +72,11 @@ export default function Testimonials() {
         </div>
 
         {/* Dynamic Trust Banner */}
-        <div className="text-center bg-gray-50 border border-gray-200 rounded-[2.5rem] p-6 md:p-8 max-w-4xl mx-auto shadow-sm animate-fade-in">
-          <h4 className="font-display font-bold text-xl text-slate-900 mb-2">
+        <div className="text-center glass-panel rounded-[2.5rem] p-6 md:p-8 max-w-4xl mx-auto shadow-sm border border-gray-200/50 dark:border-white/5">
+          <h4 className="font-display font-bold text-xl text-slate-900 dark:text-white mb-2">
             Ready to secure genuine tech with complete peace of mind?
           </h4>
-          <p className="text-xs text-slate-600 leading-relaxed font-light mb-6 max-w-2xl mx-auto">
+          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-light mb-6 max-w-2xl mx-auto">
             Connect directly with our Juba Road sales representatives today to verify real-time inventory levels, request custom delivery setup, or register an official device warranty.
           </p>
           <button

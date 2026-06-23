@@ -11,13 +11,13 @@ export default function About() {
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-xs uppercase font-mono tracking-widest text-[#F68B1E] font-extrabold mb-3">
+          <h2 className="text-xs uppercase font-mono tracking-widest text-[#F68B1E] dark:text-[#f7993a] font-extrabold mb-3">
             Our Legacy of Authenticity
           </h2>
-          <h3 className="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold text-slate-900 tracking-tight mb-4">
+          <h3 className="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold text-slate-900 dark:text-white tracking-tight mb-4">
             Bringing Genuine Modern Tech To Lira
           </h3>
-          <p className="text-slate-600 font-light leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-300 font-light leading-relaxed">
             {BUSINESS_INFO.name} is northern Uganda's trusted online retail marketplace based in Lira Town. We specialize in sourcing brand-sealed laptops, global smartphones, smart TVs, and sound systems, backed by secure local warranties and fast, reliable hometown distribution networks.
           </p>
         </div>
@@ -88,21 +88,21 @@ export default function About() {
         */}
 
         {/* Localized Location Anchor Banner */}
-        <div className="p-6 md:p-8 bg-gray-50 border border-gray-200 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="p-6 md:p-8 glass-panel rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6 border border-gray-200/50 dark:border-white/5">
           <div>
-            <span className="text-[10px] font-mono uppercase bg-[#F68B1E]/10 text-[#F68B1E] tracking-widest px-2.5 py-1 rounded border border-[#F68B1E]/30 font-semibold mb-2 inline-block">
+            <span className="text-[10px] font-mono uppercase bg-[#F68B1E]/10 text-[#F68B1E] dark:text-[#f7993a] tracking-widest px-2.5 py-1 rounded border border-[#F68B1E]/30 font-semibold mb-2 inline-block">
               LOCAL PICKUP STATION
             </span>
-            <h4 className="text-lg font-display font-bold text-slate-900 mb-1.5">
+            <h4 className="text-lg font-display font-bold text-slate-900 dark:text-white mb-1.5">
               Based in Lira, Uganda (Juba Road PlotHQ Center)
             </h4>
-            <p className="text-xs text-slate-650 text-slate-600 font-light max-w-2xl">
+            <p className="text-xs text-slate-600 dark:text-slate-300 font-light max-w-2xl">
               Do you prefer face-to-face assistance or collecting your order in person rather than home shipping? Our distribution center and pickup station is open 6 days a week directly on Juba Road, Lira Town. Visit us to collect, verify and configure your items.
             </p>
           </div>
           <a
             href="#contact"
-            className="px-6 py-3 rounded-xl border border-gray-300 hover:border-[#F68B1E] hover:bg-gray-100 text-xs font-semibold text-slate-800 transition-all text-center shrink-0 w-full md:w-auto cursor-pointer"
+            className="px-6 py-3 rounded-xl border border-gray-300 dark:border-white/10 hover:border-[#F68B1E] hover:bg-gray-100/50 dark:hover:bg-slate-800/60 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-all text-center shrink-0 w-full md:w-auto cursor-pointer"
           >
             Find Our Direct Hub Location
           </a>

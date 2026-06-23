@@ -38,12 +38,12 @@ const getEnvVal = (key: string, fallback: string): string => {
 };
 
 const firebaseConfig = {
-  apiKey: getEnvVal("VITE_FIREBASE_API_KEY", firebaseAppletConfig.apiKey || "AIzaSyCm8dWGT8Up2pRwxsZOQsSz_GiY2SzbQlo"),
-  authDomain: getEnvVal("VITE_FIREBASE_AUTH_DOMAIN", firebaseAppletConfig.authDomain || "gen-lang-client-0207053136.firebaseapp.com"),
-  projectId: getEnvVal("VITE_FIREBASE_PROJECT_ID", firebaseAppletConfig.projectId || "gen-lang-client-0207053136"),
-  storageBucket: getEnvVal("VITE_FIREBASE_STORAGE_BUCKET", firebaseAppletConfig.storageBucket || "gen-lang-client-0207053136.firebasestorage.app"),
-  messagingSenderId: getEnvVal("VITE_FIREBASE_MESSAGING_SENDER_ID", firebaseAppletConfig.messagingSenderId || "863997008927"),
-  appId: getEnvVal("VITE_FIREBASE_APP_ID", firebaseAppletConfig.appId || "1:863997008927:web:fe8f2d6d5868e54576892a")
+  apiKey: getEnvVal("VITE_FIREBASE_API_KEY", firebaseAppletConfig.apiKey || ""),
+  authDomain: getEnvVal("VITE_FIREBASE_AUTH_DOMAIN", firebaseAppletConfig.authDomain || ""),
+  projectId: getEnvVal("VITE_FIREBASE_PROJECT_ID", firebaseAppletConfig.projectId || ""),
+  storageBucket: getEnvVal("VITE_FIREBASE_STORAGE_BUCKET", firebaseAppletConfig.storageBucket || ""),
+  messagingSenderId: getEnvVal("VITE_FIREBASE_MESSAGING_SENDER_ID", firebaseAppletConfig.messagingSenderId || ""),
+  appId: getEnvVal("VITE_FIREBASE_APP_ID", firebaseAppletConfig.appId || "")
 };
 
 const app = initializeApp(firebaseConfig);

@@ -54,7 +54,7 @@ function SeoHelmet() {
 function MainLayout() {
   const { showMerchantAdmin } = useCart();
   return (
-    <div className="relative min-h-screen font-sans bg-[#fcfcfd] text-[#1c1c1e] antialiased overflow-x-hidden">
+    <div className="relative min-h-screen font-sans bg-bg-primary text-text-primary antialiased overflow-x-hidden">
       {/* Dynamic Navigation Header */}
       <Header />
 

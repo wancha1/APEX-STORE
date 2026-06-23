@@ -20,6 +20,8 @@ import {
 const googleProvider = new GoogleAuthProvider();
 
 interface CartContextType {
+  isDarkMode: boolean;
+  setIsDarkMode: (dark: boolean) => void;
   activeNotification: {
     product: Product;
     type: "cart" | "wishlist";
@@ -271,6 +273,33 @@ const generatePrepopulatedEvents = () => {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  // Theme state
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem("apex_dark_mode");
+      if (saved !== null) {
+        return saved === "true";
+      }
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      const root = window.document.documentElement;
+      if (isDarkMode) {
+        root.classList.add("dark");
+      } else {
+        root.classList.remove("dark");
+      }
+      localStorage.setItem("apex_dark_mode", String(isDarkMode));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [isDarkMode]);
+
   // Dynamic Product Catalog State
   const [products, setProducts] = useState<Product[]>([]);
   const [isProductsLoading, setIsProductsLoading] = useState<boolean>(true);
@@ -825,6 +854,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   return (
     <CartContext.Provider
       value={{
+        isDarkMode,
+        setIsDarkMode,
         activeNotification,
         setActiveNotification,
         cart,

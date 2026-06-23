@@ -19,7 +19,7 @@ const getTrustIcon = (iconName: string) => {
 
 export default function WhyChooseUs() {
   return (
-    <section id="why-us" className="py-24 relative overflow-hidden text-left bg-white">
+    <section id="why-us" className="py-24 relative overflow-hidden text-left bg-bg-primary">
       {/* Visual Ambient Element */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-500/3 rounded-full blur-[150px] pointer-events-none" />
 
@@ -28,28 +28,28 @@ export default function WhyChooseUs() {
           
           {/* Why Choose Us Left: Text Pitch */}
           <div className="lg:col-span-5 text-left">
-            <h2 className="text-xs uppercase font-mono tracking-widest text-[#8b5cf6] font-extrabold mb-3">
+            <h2 className="text-xs uppercase font-mono tracking-widest text-[#8b5cf6] dark:text-purple-400 font-extrabold mb-3">
               Uncompromised Brand Authenticity
             </h2>
-            <h3 className="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold text-slate-900 tracking-tight mb-6">
+            <h3 className="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold text-slate-900 dark:text-white tracking-tight mb-6">
               Why Discerning Clients Choose {BUSINESS_INFO.name}
             </h3>
-            <p className="text-slate-600 font-light leading-relaxed mb-6">
+            <p className="text-slate-600 dark:text-slate-300 font-light leading-relaxed mb-6">
               We do not deal in gray-market, refurbished, or unsealed gadgets. We source direct, sealed box devices with verified manufacturing serial keys, guaranteeing that every laptop, smart TV, or phone you purchase is 100% genuine and untouched.
             </p>
-            <p className="text-slate-600 font-light leading-relaxed mb-8">
+            <p className="text-slate-600 dark:text-slate-300 font-light leading-relaxed mb-8">
               Whether mounting concrete home theater setups, supplying structural computer labs for Lira corporations, or setting up personal accessories, we back our catalog with a certified physical check-in and instantaneous product replacements.
             </p>
 
             {/* Micro Rating */}
-            <div className="p-4 bg-gray-50 border border-gray-200 rounded-2xl inline-flex items-center gap-3">
+            <div className="p-4 glass-panel rounded-2xl inline-flex items-center gap-3 border border-gray-200/50 dark:border-white/5">
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="w-4 h-4 text-amber-500 fill-amber-500" />
                 ))}
               </div>
-              <div className="text-xs text-slate-600 font-mono">
-                Trusted by <span className="text-slate-900 font-bold font-sans">10,050+ happy tech buyers</span> in Uganda
+              <div className="text-xs text-slate-600 dark:text-slate-300 font-mono">
+                Trusted by <span className="text-slate-900 dark:text-white font-bold font-sans">10,050+ happy tech buyers</span> in Uganda
               </div>
             </div>
           </div>
@@ -60,17 +60,17 @@ export default function WhyChooseUs() {
               {TRUST_SIGNALS.map((signal, idx) => (
                 <div
                   key={idx}
-                  className="bg-white border border-gray-150 rounded-[2rem] p-6 md:p-8 hover:shadow-md hover:border-gray-250 transition-all text-left"
+                  className="glass-panel glass-panel-hover rounded-[2rem] p-6 md:p-8 hover:shadow-md border border-gray-200/50 dark:border-white/5"
                 >
                   {/* Icon Circle */}
-                  <div className="w-10 h-10 rounded-xl bg-gray-55 bg-gray-50 border border-gray-200 flex items-center justify-center mb-5">
+                  <div className="w-10 h-10 rounded-xl bg-gray-50/50 dark:bg-slate-900/40 border border-gray-200/50 dark:border-white/5 flex items-center justify-center mb-5">
                     {getTrustIcon(signal.iconName)}
                   </div>
 
-                  <h3 className="font-display font-bold text-lg text-slate-900 mb-2.5">
+                  <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white mb-2.5">
                     {signal.title}
                   </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed font-light">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-light">
                     {signal.description}
                   </p>
                 </div>

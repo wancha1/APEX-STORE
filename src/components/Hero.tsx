@@ -264,7 +264,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative pt-24 md:pt-32 pb-12 bg-[#fcfcfd] overflow-hidden"
+      className="relative pt-24 md:pt-32 pb-12 bg-bg-primary overflow-hidden"
     >
       {/* Decorative Blur Blobs */}
       <div className="absolute top-0 left-[-5%] w-[35%] h-[35%] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none -z-10" />
@@ -276,9 +276,9 @@ export default function Hero() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
           
           {/* 1. Left Sidebar: Jumia-style Categories Directory */}
-          <div className="hidden lg:col-span-3 lg:flex flex-col bg-white border border-gray-200 shadow-sm rounded-2xl p-4 text-left justify-between min-h-[460px] backdrop-blur-md">
+          <div className="hidden lg:col-span-3 lg:flex flex-col glass-panel glass-panel-hover rounded-2xl p-4 text-left justify-between min-h-[460px]">
             <div className="space-y-1">
-              <span className="text-[10px] font-mono text-slate-400 tracking-widest font-bold block mb-3.5 px-2">
+              <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 tracking-widest font-bold block mb-3.5 px-2">
                 🏠 DEPARTMENTS
               </span>
               {categoriesList.map((cat) => {
@@ -288,33 +288,33 @@ export default function Hero() {
                   <button
                     key={cat.name}
                     onClick={() => handleCategoryChoice(cat.name)}
-                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all cursor-pointer text-left group ${
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all cursor-pointer text-left group border ${
                       isSelected 
-                        ? "bg-blue-50 border border-blue-200 text-blue-600 font-bold" 
-                        : "text-slate-600 hover:text-neutral-900 hover:bg-gray-50 border border-transparent"
+                        ? "bg-blue-50/80 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900/30 text-blue-600 dark:text-blue-400 font-bold" 
+                        : "text-slate-600 dark:text-slate-300 hover:text-neutral-900 dark:hover:text-white hover:bg-gray-50/50 dark:hover:bg-slate-900/40 border-transparent"
                     }`}
                   >
-                    <div className={`p-1.5 rounded-lg ${isSelected ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-slate-500"}`}>
+                    <div className={`p-1.5 rounded-lg ${isSelected ? "bg-blue-100/80 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400" : "bg-gray-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"}`}>
                       <IconComp className="w-3.5 h-3.5 shrink-0" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="text-xs font-semibold leading-tight">{cat.name}</div>
-                      <div className="text-[9px] text-slate-500 truncate leading-none mt-0.5">{cat.label}</div>
+                      <div className="text-[9px] text-slate-500 dark:text-slate-400 truncate leading-none mt-0.5">{cat.label}</div>
                     </div>
-                    <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isSelected ? "text-blue-600 translate-x-0.5" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isSelected ? "text-blue-600 dark:text-blue-400 translate-x-0.5" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`} />
                   </button>
                 );
               })}
             </div>
 
-            <div className="border-t border-gray-100 pt-4 mt-4 px-2 select-none">
+            <div className="border-t border-gray-100 dark:border-white/5 pt-4 mt-4 px-2 select-none">
               <div className="flex items-center gap-2 mb-1.5">
-                <Shield className="w-3.5 h-3.5 text-blue-500" />
-                <span className="text-[9px] font-mono font-bold text-neutral-900 uppercase tracking-wider">
+                <Shield className="w-3.5 h-3.5 text-blue-500 dark:text-blue-450" />
+                <span className="text-[9px] font-mono font-bold text-neutral-900 dark:text-white uppercase tracking-wider">
                   Verified Local Security
                 </span>
               </div>
-              <p className="text-[9px] text-slate-500 leading-normal font-sans">
+              <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-normal font-sans">
                 100% Genuine electronics. Escrow-protected local pay upon physical examination.
               </p>
             </div>

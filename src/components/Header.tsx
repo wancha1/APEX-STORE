@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, MessageSquare, Smartphone, ShoppingBag, Heart, GitCompare, Search, Bookmark, User, LogOut, ChevronDown } from "lucide-react";
+import { Menu, X, MessageSquare, Smartphone, ShoppingBag, Heart, GitCompare, Search, Bookmark, User, LogOut, ChevronDown, Sun, Moon } from "lucide-react";
 import { BUSINESS_INFO } from "../data";
 import { useCart } from "../context/CartContext";
 import { motion, AnimatePresence } from "motion/react";
@@ -21,7 +21,9 @@ export default function Header() {
     isSearchOpen,
     setIsSearchOpen,
     customerUser,
-    logoutCustomer
+    logoutCustomer,
+    isDarkMode,
+    setIsDarkMode
   } = useCart();
 
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -60,8 +62,8 @@ export default function Header() {
       id="site-header"
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${
         isScrolled
-          ? "bg-white/95 border-b border-gray-250 backdrop-blur-2xl py-3.5 shadow-sm"
-          : "bg-neutral-50/70 border-b border-gray-200/50 backdrop-blur-xl py-6"
+          ? "bg-white/75 dark:bg-slate-950/65 border-b border-gray-200/40 dark:border-white/5 backdrop-blur-2xl py-3.5 shadow-sm"
+          : "bg-neutral-50/40 dark:bg-slate-950/20 border-b border-transparent backdrop-blur-xl py-6"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -73,10 +75,10 @@ export default function Header() {
               <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-blue-500 to-purple-600 blur opacity-20 group-hover:opacity-40 transition-opacity duration-300 -z-10" />
             </div>
              <div className="flex flex-col text-left">
-              <span className="font-display font-semibold tracking-tight text-neutral-900 text-lg leading-tight flex items-center gap-1 transition-colors">
-                Apex <span className="text-blue-600">Phones</span>
+              <span className="font-display font-semibold tracking-tight text-neutral-900 dark:text-white text-lg leading-tight flex items-center gap-1 transition-colors">
+                Apex <span className="text-blue-600 dark:text-blue-400">Phones</span>
               </span>
-              <span className="text-[9px] font-mono font-medium text-blue-400 capitalize tracking-wider leading-none">
+              <span className="text-[9px] font-mono font-medium text-blue-400 dark:text-blue-300 capitalize tracking-wider leading-none">
                 electronics
               </span>
             </div>
@@ -88,7 +90,7 @@ export default function Header() {
               <a
                 key={link.name}
                 href={link.href}
-                className="text-neutral-600 hover:text-blue-600 text-sm font-medium transition-all duration-300 hover:scale-[1.03] relative group"
+                className="text-neutral-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-medium transition-all duration-300 hover:scale-[1.03] relative group"
               >
                 {link.name}
                 <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300 group-hover:w-full" />
@@ -101,18 +103,18 @@ export default function Header() {
             {/* Elegant Search bar trigger */}
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="flex items-center gap-2.5 px-4 py-2 rounded-xl border border-gray-250 bg-gray-50/50 hover:bg-gray-100/80 text-slate-500 hover:text-neutral-900 transition-all cursor-pointer font-sans text-xs group"
+              className="flex items-center gap-2.5 px-4 py-2 rounded-xl border border-gray-250 dark:border-white/10 bg-gray-50/50 dark:bg-slate-900/40 hover:bg-gray-100/80 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-neutral-900 dark:hover:text-white transition-all cursor-pointer font-sans text-xs group"
               title="Search My Store Products"
               aria-label="Open global search"
             >
-              <Search className="w-4 h-4 text-blue-500 group-hover:text-blue-600 transition-colors" />
-              <span className="text-slate-500 select-none">Search store...</span>
+              <Search className="w-4 h-4 text-blue-500 dark:text-blue-400 group-hover:text-blue-600 transition-colors" />
+              <span className="text-slate-500 dark:text-slate-400 select-none">Search store...</span>
             </button>
 
             {/* E-commerce Wishlist Icon */}
             <button
               onClick={() => setIsWishlistOpen(true)}
-              className="relative p-2.5 rounded-xl border border-gray-250 bg-gray-50/50 hover:bg-gray-100 text-slate-600 hover:text-neutral-900 transition-all cursor-pointer flex items-center justify-center"
+              className="relative p-2.5 rounded-xl border border-gray-250 dark:border-white/10 bg-gray-50/50 dark:bg-slate-900/40 hover:bg-gray-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-neutral-900 dark:hover:text-white transition-all cursor-pointer flex items-center justify-center"
               title="Open My Wishlist"
               aria-label="Toggle Wishlist"
             >
@@ -134,7 +136,7 @@ export default function Header() {
             {/* E-commerce Cart Icon */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative px-3.5 py-2.5 rounded-xl border border-gray-250 bg-gray-50/50 hover:bg-gray-100 text-slate-600 hover:text-neutral-900 transition-all cursor-pointer flex items-center gap-2"
+              className="relative px-3.5 py-2.5 rounded-xl border border-gray-250 dark:border-white/10 bg-gray-50/50 dark:bg-slate-900/40 hover:bg-gray-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-neutral-900 dark:hover:text-white transition-all cursor-pointer flex items-center gap-2"
               aria-label="Toggle Shopping Cart"
             >
               <ShoppingBag className="w-4 h-4 text-blue-500" />
@@ -158,7 +160,7 @@ export default function Header() {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-gray-250 bg-gray-50/50 hover:bg-gray-100 text-slate-600 hover:text-neutral-900 transition-all cursor-pointer text-xs"
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-gray-250 dark:border-white/10 bg-gray-50/50 dark:bg-slate-900/40 hover:bg-gray-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-neutral-900 dark:hover:text-white transition-all cursor-pointer text-xs"
                   aria-label="User account dropdown"
                 >
                   {customerUser.photoURL ? (
@@ -213,6 +215,19 @@ export default function Header() {
               </button>
             )}
 
+            {/* Theme Toggle Button */}
+            <button
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="p-2.5 rounded-xl border border-gray-250 dark:border-white/10 bg-gray-50/50 dark:bg-slate-900/40 hover:bg-gray-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-neutral-900 dark:hover:text-white transition-all cursor-pointer flex items-center justify-center"
+              title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              aria-label="Toggle dark mode"
+            >
+              <div className="relative w-5 h-5 flex items-center justify-center">
+                <Sun className={`w-5 h-5 text-amber-500 transition-all duration-500 absolute ${isDarkMode ? "rotate-90 scale-0 opacity-0" : "rotate-0 scale-100 opacity-100"}`} />
+                <Moon className={`w-5 h-5 text-blue-400 transition-all duration-500 absolute ${isDarkMode ? "rotate-0 scale-100 opacity-100" : "-rotate-90 scale-0 opacity-0"}`} />
+              </div>
+            </button>
+
             <button
               id="header-cta-whatsapp"
               onClick={handleWhatsAppClick}
@@ -225,6 +240,18 @@ export default function Header() {
 
           {/* Mobile Menu & Card Utility Buttons */}
           <div className="lg:hidden flex items-center gap-3">
+            {/* Mobile Theme toggle */}
+            <button
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="relative p-2 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-neutral-950 dark:hover:text-white transition-all cursor-pointer flex items-center justify-center overflow-hidden"
+              aria-label="Toggle mobile dark mode"
+            >
+              <div className="relative w-4.5 h-4.5 flex items-center justify-center">
+                <Sun className={`w-4.5 h-4.5 text-amber-500 transition-all duration-500 absolute ${isDarkMode ? "rotate-90 scale-0 opacity-0" : "rotate-0 scale-100 opacity-100"}`} />
+                <Moon className={`w-4.5 h-4.5 text-blue-400 transition-all duration-500 absolute ${isDarkMode ? "rotate-0 scale-100 opacity-100" : "-rotate-90 scale-0 opacity-0"}`} />
+              </div>
+            </button>
+
             {/* Mobile Search trigger */}
             <button
               onClick={() => setIsSearchOpen(true)}
@@ -284,7 +311,7 @@ export default function Header() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="lg:hidden bg-white border-b border-gray-200 backdrop-blur-md"
+            className="lg:hidden bg-white/85 dark:bg-slate-950/85 border-b border-gray-200 dark:border-white/5 backdrop-blur-xl"
           >
             <div className="px-4 pt-2 pb-6 space-y-2">
               {navLinks.map((link) => (
@@ -292,27 +319,27 @@ export default function Header() {
                   key={link.name}
                   href={link.href}
                   onClick={() => setIsOpen(false)}
-                  className="block px-4 py-3 rounded-xl text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all text-left"
+                  className="block px-4 py-3 rounded-xl text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-slate-900/60 border border-transparent hover:border-gray-100 dark:hover:border-white/5 transition-all text-left"
                 >
                   {link.name}
                 </a>
               ))}
 
               {/* Mobile Account Profile Sync Block */}
-              <div className="pt-2 pb-2 px-4 border-t border-gray-100 mx-2 my-1">
+              <div className="pt-2 pb-2 px-4 border-t border-gray-100 dark:border-white/5 mx-2 my-1">
                 {customerUser ? (
                   <div className="space-y-3 text-left">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600">
+                      <div className="w-8 h-8 rounded-full bg-purple-50 dark:bg-slate-900 border border-purple-100 dark:border-white/10 flex items-center justify-center text-purple-600">
                         {customerUser.photoURL ? (
                           <img src={customerUser.photoURL} alt="Avatar" className="w-full h-full rounded-full" referrerPolicy="no-referrer" />
                         ) : (
-                          <User className="w-4 h-4" />
+                          <User className="w-4 h-4 text-purple-500" />
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-semibold text-neutral-900 truncate">{customerUser.displayName || "Buyer Account"}</p>
-                        <p className="text-[10px] text-slate-500 font-mono truncate">{customerUser.email}</p>
+                        <p className="text-xs font-semibold text-neutral-900 dark:text-white truncate">{customerUser.displayName || "Buyer Account"}</p>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">{customerUser.email}</p>
                       </div>
                     </div>
                     <button
@@ -320,7 +347,7 @@ export default function Header() {
                         await logoutCustomer();
                         setIsOpen(false);
                       }}
-                      className="w-full py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-250 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                      className="w-full py-2.5 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-250 dark:border-red-900/30 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                       <span>Disconnect Sync Profile</span>
@@ -332,7 +359,7 @@ export default function Header() {
                       setIsAuthModalOpen(true);
                       setIsOpen(false);
                     }}
-                    className="w-full py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all"
+                    className="w-full py-2.5 bg-blue-50 dark:bg-blue-950/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/30 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all"
                   >
                     <User className="w-3.5 h-3.5 text-blue-500" />
                     <span>User Account Sign In / Sign Up</span>
