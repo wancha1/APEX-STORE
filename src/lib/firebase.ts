@@ -25,7 +25,14 @@ const cleanEnvVar = (val: any): string | undefined => {
 };
 
 const getEnvVal = (key: string, fallback: string): string => {
-  const envVal = (import.meta as any).env?.[key];
+  let envVal = (import.meta as any).env?.[key];
+  if (key.startsWith("VITE_")) {
+    const apexKey = key.replace("VITE_", "APEX_");
+    const apexVal = (import.meta as any).env?.[apexKey];
+    if (apexVal !== undefined && cleanEnvVar(apexVal) !== undefined) {
+      envVal = apexVal;
+    }
+  }
   const cleaned = cleanEnvVar(envVal);
   return cleaned !== undefined ? cleaned : fallback;
 };

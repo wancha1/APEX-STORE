@@ -42,6 +42,14 @@ function saveRecoveryStore() {
   }
 }
 
+function getSecureAdminEmail(): string {
+  return adminRecoveryStore.overrideEmail || process.env.APEX_ADMIN_EMAIL || process.env.ADMIN_EMAIL || "administrator@apex.co.ug";
+}
+
+function getSecureAdminPassword(): string | undefined {
+  return adminRecoveryStore.overridePasswordHash || process.env.APEX_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
+}
+
 // Log initial recovery master key
 console.log("\n=======================================================");
 console.log("🔒 APEX DEVICES - ADMINISTRATIVE ACCESS CONTROL ONLINE 🔒");
@@ -136,8 +144,8 @@ app.use((req, res, next) => {
 // Real-time runtime configurations for public client integrations
 app.get('/api/config', (req, res) => {
   res.json({
-    supabaseUrl: process.env.VITE_SUPABASE_URL || "",
-    supabaseAnonKey: process.env.VITE_SUPABASE_ANON_KEY || ""
+    supabaseUrl: process.env.APEX_SUPABASE_URL || process.env.VITE_SUPABASE_URL || "",
+    supabaseAnonKey: process.env.APEX_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || ""
   });
 });
 
@@ -190,13 +198,13 @@ Your goals:
 `;
 
 // API Routes
-const JWT_SECRET = process.env.JWT_SECRET || 'apex-secure-secret-token-key-2026';
+const JWT_SECRET = process.env.APEX_JWT_SECRET || process.env.JWT_SECRET || 'apex-secure-secret-token-key-2026';
 
 let serverSupabaseInstance: ReturnType<typeof createClient> | null = null;
 function getServerSupabase() {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const supabaseUrl = process.env.APEX_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   // Prefer service_role key to bypass RLS for administrative mutations on the backend, otherwise fallback to anon key safely
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  const supabaseKey = process.env.APEX_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.APEX_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseKey) {
     return null;
   }
@@ -246,8 +254,8 @@ app.post('/api/admin/login', loginLimiter, (req, res) => {
       return res.status(400).json({ error: 'Email and password are required credentials.' });
     }
 
-    const secureAdminEmail = adminRecoveryStore.overrideEmail || process.env.ADMIN_EMAIL || "administrator@apex.co.ug";
-    const secureAdminPassword = adminRecoveryStore.overridePasswordHash || process.env.ADMIN_PASSWORD;
+    const secureAdminEmail = getSecureAdminEmail();
+    const secureAdminPassword = getSecureAdminPassword();
 
     if (!secureAdminPassword) {
       console.error("[Auth System Error]: ADMIN_PASSWORD is not configured in environment variables or recovery store!");
@@ -359,7 +367,7 @@ app.post('/api/admin/recovery/request', (req, res) => {
       return res.status(400).json({ error: 'Please submit your authorized administrative email.' });
     }
 
-    const secureAdminEmail = adminRecoveryStore.overrideEmail || process.env.ADMIN_EMAIL || "administrator@apex.co.ug";
+    const secureAdminEmail = getSecureAdminEmail();
 
     if (email.toLowerCase().trim() !== secureAdminEmail.toLowerCase().trim()) {
       // Return 200 with generic message to prevent username harvesting/brute force probing
@@ -403,7 +411,7 @@ app.post('/api/admin/recovery/verify', (req, res) => {
       return res.status(400).json({ error: 'Missing credentials, token verification, or new passphrase details.' });
     }
 
-    const secureAdminEmail = adminRecoveryStore.overrideEmail || process.env.ADMIN_EMAIL || "administrator@apex.co.ug";
+    const secureAdminEmail = getSecureAdminEmail();
     if (email.toLowerCase().trim() !== secureAdminEmail.toLowerCase().trim()) {
       return res.status(400).json({ error: 'Authentication email does not match administrative registry.' });
     }
@@ -449,7 +457,7 @@ app.post('/api/admin/recovery/bypass', (req, res) => {
       return res.status(401).json({ error: 'Invalid master recovery key authority.' });
     }
 
-    const secureAdminEmail = adminRecoveryStore.overrideEmail || process.env.ADMIN_EMAIL || "administrator@apex.co.ug";
+    const secureAdminEmail = getSecureAdminEmail();
     const passwordHash = bcrypt.hashSync(newPassword, 10);
     adminRecoveryStore.overridePasswordHash = passwordHash;
     saveRecoveryStore();
@@ -486,7 +494,7 @@ app.post('/api/admin/recovery/questions', (req, res) => {
       return res.status(401).json({ error: 'Incorrect answers to structural security questions. Access denied.' });
     }
 
-    const secureAdminEmail = adminRecoveryStore.overrideEmail || process.env.ADMIN_EMAIL || "administrator@apex.co.ug";
+    const secureAdminEmail = getSecureAdminEmail();
     const passwordHash = bcrypt.hashSync(newPassword, 10);
     adminRecoveryStore.overridePasswordHash = passwordHash;
     saveRecoveryStore();

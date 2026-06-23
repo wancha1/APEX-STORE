@@ -1,8 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { Product } from "../types";
 
-let supabaseUrl = ((import.meta as any).env?.VITE_SUPABASE_URL) || "";
-let supabaseAnonKey = ((import.meta as any).env?.VITE_SUPABASE_ANON_KEY) || "";
+let supabaseUrl = ((import.meta as any).env?.APEX_SUPABASE_URL) || ((import.meta as any).env?.VITE_SUPABASE_URL) || "";
+let supabaseAnonKey = ((import.meta as any).env?.APEX_SUPABASE_ANON_KEY) || ((import.meta as any).env?.VITE_SUPABASE_ANON_KEY) || "";
 
 export function getIsSupabaseConfigured(): boolean {
   const urlValid = supabaseUrl && 
