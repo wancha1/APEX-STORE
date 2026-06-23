@@ -516,19 +516,19 @@ Hello ${BUSINESS_INFO.name}! 👋 I placed an order via your online store. Pleas
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 220 }}
             id="cart-drawer-container"
-            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white border-l border-gray-200 shadow-2xl z-50 flex flex-col justify-between text-left"
+            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white dark:bg-[#09091b] border-l border-gray-200 dark:border-white/10 shadow-2xl z-50 flex flex-col justify-between text-left transition-colors duration-300"
           >
             {/* Header */}
-            <div className="p-6 border-b border-gray-150 flex items-center justify-between shrink-0">
+            <div className="p-6 border-b border-gray-150 dark:border-white/10 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
-                <ShoppingBag className="w-5 h-5 text-blue-600" />
-                <h4 className="font-display font-bold text-lg text-slate-900">
+                <ShoppingBag className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <h4 className="font-display font-bold text-lg text-slate-900 dark:text-white">
                   {isCheckingOut ? "Secure Checkout" : activeTab === "cart" ? `Shopping Cart (${cartCount})` : "Purchase Archive"}
                 </h4>
               </div>
               <button
                 onClick={() => setIsCartOpen(false)}
-                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-gray-100 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-gray-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-900 transition-colors cursor-pointer"
                 aria-label="Close Cart"
               >
                 <X className="w-5 h-5" />
@@ -537,14 +537,14 @@ Hello ${BUSINESS_INFO.name}! 👋 I placed an order via your online store. Pleas
 
             {/* Tab Swapper */}
             {!isCheckingOut && (
-              <div className="mx-6 mt-4 flex border border-gray-150 bg-gray-50 p-1 rounded-xl shrink-0">
+              <div className="mx-6 mt-4 flex border border-gray-150 dark:border-white/5 bg-gray-50 dark:bg-slate-900/50 p-1 rounded-xl shrink-0">
                 <button
                   type="button"
                   onClick={() => setActiveTab("cart")}
                   className={`flex-1 py-1.5 text-center text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
                     activeTab === "cart"
                       ? "bg-blue-600 font-extrabold text-white shadow-md"
-                      : "text-slate-650 text-slate-600 hover:text-slate-900"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
                   Cart ({cartCount})
@@ -558,7 +558,7 @@ Hello ${BUSINESS_INFO.name}! 👋 I placed an order via your online store. Pleas
                   className={`flex-1 py-1.5 text-center text-[11px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
                     activeTab === "history"
                       ? "bg-blue-600 font-extrabold text-white shadow-md"
-                      : "text-slate-650 text-slate-600 hover:text-slate-900"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
                   <FileText className="w-3.5 h-3.5" />
@@ -570,7 +570,7 @@ Hello ${BUSINESS_INFO.name}! 👋 I placed an order via your online store. Pleas
                   className={`flex-1 py-1.5 text-center text-[11px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
                     activeTab === "track"
                       ? "bg-blue-600 font-extrabold text-white shadow-md"
-                      : "text-slate-650 text-slate-600 hover:text-slate-900"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
                   <Truck className="w-3.5 h-3.5" />

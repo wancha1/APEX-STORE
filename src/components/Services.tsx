@@ -24,7 +24,6 @@ import {
   ChevronLeft,
   ChevronRight,
   SlidersHorizontal,
-  GitCompare,
   Bell,
   MessageSquare,
   TrendingDown,
@@ -123,13 +122,7 @@ export default function Services() {
     isProductsLoading,
     setIsCartOpen,
     toggleLike,
-    isLiked,
-    compareList,
-    toggleCompare,
-    isInCompare,
-    clearCompare,
-    isCompareOpen,
-    setIsCompareOpen
+    isLiked
   } = useCart();
 
   // Restock notify subscription inputs
@@ -828,23 +821,6 @@ Please assign a tech concierge to review stock and delivery schedules at my conv
                           title={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
                         >
                           <Bookmark className={`w-3.5 h-3.5 transition-transform duration-300 ${isInWishlist(product.id) ? "fill-pink-500 scale-110 text-pink-500" : ""}`} />
-                        </button>
-
-                        {/* Functional Compare Toggle Button */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleCompare(product);
-                          }}
-                          className={`w-8.5 h-8.5 rounded-full flex items-center justify-center border backdrop-blur-md active:scale-90 transition-all cursor-pointer ${
-                            isInCompare(product.id)
-                              ? "bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900/30 text-blue-600 shadow-sm"
-                              : "bg-white/90 dark:bg-slate-950/90 border-gray-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-white dark:hover:bg-slate-900"
-                          }`}
-                          title={isInCompare(product.id) ? "Remove from Compare" : "Compare details side-by-side"}
-                        >
-                          <GitCompare className={`w-3.5 h-3.5 transition-transform duration-300 ${isInCompare(product.id) ? "rotate-180 scale-110 text-blue-500" : ""}`} />
                         </button>
                       </div>
                     </div>
@@ -1954,41 +1930,6 @@ Please assign a tech concierge to review stock and delivery schedules at my conv
               )}
             </motion.div>
           </div>
-        )}
-      </AnimatePresence>
-
-      {/* 5. Quick Compare Sticky Float Overlay */}
-      <AnimatePresence>
-        {compareList.length > 0 && (
-          <motion.div
-            initial={{ y: 80, opacity: 0, x: "-50%" }}
-            animate={{ y: 0, opacity: 1, x: "-50%" }}
-            exit={{ y: 80, opacity: 0, x: "-50%" }}
-            className="fixed bottom-6 left-1/2 z-40 w-[92%] max-w-xl bg-[#060613]/95 backdrop-blur-md border border-blue-500/25 shadow-[0_10px_40px_rgba(59,130,246,0.2)] rounded-[1.8rem] px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 select-none"
-          >
-            <div className="text-left">
-              <span className="text-[8px] font-mono text-blue-400 uppercase font-black tracking-widest block mb-0.5">
-                Technical Benchmark Compare
-              </span>
-              <p className="text-xs font-sans text-slate-300">
-                You have selected <strong className="text-white font-bold font-mono">{compareList.length}</strong> product{compareList.length > 1 ? "s" : ""} to compare specs side-by-side.
-              </p>
-            </div>
-            <div className="flex gap-2.5 shrink-0 w-full sm:w-auto">
-              <button
-                onClick={clearCompare}
-                className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all text-xs font-bold uppercase font-mono cursor-pointer"
-              >
-                Clear
-              </button>
-              <button
-                onClick={() => setIsCompareOpen(true)}
-                className="flex-1 sm:flex-initial px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold uppercase font-mono text-xs cursor-pointer shadow-lg shadow-blue-500/20"
-              >
-                Compare Now
-              </button>
-            </div>
-          </motion.div>
         )}
       </AnimatePresence>
     </section>

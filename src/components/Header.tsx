@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, MessageSquare, Smartphone, ShoppingBag, Heart, GitCompare, Search, Bookmark, User, LogOut, ChevronDown, Sun, Moon } from "lucide-react";
+import { Menu, X, MessageSquare, Smartphone, ShoppingBag, Heart, Search, Bookmark, User, LogOut, ChevronDown, Sun, Moon } from "lucide-react";
 import { BUSINESS_INFO } from "../data";
 import { useCart } from "../context/CartContext";
 import { motion, AnimatePresence } from "motion/react";
@@ -16,8 +16,6 @@ export default function Header() {
     setIsCartOpen, 
     wishlist, 
     setIsWishlistOpen, 
-    compareList, 
-    setIsCompareOpen,
     isSearchOpen,
     setIsSearchOpen,
     customerUser,
@@ -255,7 +253,7 @@ export default function Header() {
             {/* Mobile Search trigger */}
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="relative p-2 rounded-xl bg-gray-50 border border-gray-200 text-slate-600 hover:text-neutral-950 transition-all cursor-pointer flex items-center justify-center"
+              className="relative p-2 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-neutral-950 dark:hover:text-white transition-all cursor-pointer flex items-center justify-center"
               aria-label="Mobile global search"
             >
               <Search className="w-4.5 h-4.5" />
@@ -264,7 +262,7 @@ export default function Header() {
             {/* Mobile Wishlist bookmark */}
             <button
               onClick={() => setIsWishlistOpen(true)}
-              className="relative p-2 rounded-xl bg-gray-50 border border-gray-200 text-slate-600 hover:text-neutral-950 transition-all cursor-pointer flex items-center justify-center"
+              className="relative p-2 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-neutral-950 dark:hover:text-white transition-all cursor-pointer flex items-center justify-center"
               aria-label="Mobile Wishlist Sidebar"
             >
               <Bookmark className={`w-4.5 h-4.5 ${wishlist.length > 0 ? "fill-pink-500 text-pink-500" : ""}`} />
@@ -278,7 +276,7 @@ export default function Header() {
             {/* Mobile Shopping Cart trigger */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-slate-600 hover:text-neutral-900 transition-all cursor-pointer flex items-center gap-1.5"
+              className="relative px-3 py-2 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-neutral-900 dark:hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
               aria-label="Mobile Shopping Cart"
             >
               <ShoppingBag className="w-4 h-4 text-blue-500" />
@@ -293,7 +291,7 @@ export default function Header() {
             <button
               id="mobile-menu-toggle"
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-xl text-gray-500 hover:text-neutral-950 hover:bg-gray-100 focus:outline-none transition-colors"
+              className="p-2 rounded-xl text-gray-500 dark:text-slate-400 hover:text-neutral-950 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-900 focus:outline-none transition-colors"
               aria-label="Toggle Menu"
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}

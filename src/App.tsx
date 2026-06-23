@@ -11,7 +11,6 @@ import Footer from "./components/Footer";
 import WhatsAppFloating from "./components/WhatsAppFloating";
 import CartDrawer from "./components/CartDrawer";
 import WishlistDrawer from "./components/WishlistDrawer";
-import CompareModal from "./components/CompareModal";
 import SearchModal from "./components/SearchModal";
 import { CartProvider, useCart } from "./context/CartContext";
 import BulkImporter from "./components/BulkImporter";
@@ -90,9 +89,6 @@ function MainLayout() {
 
       {/* Wishlist Sidebar Overlay */}
       <WishlistDrawer />
-
-      {/* Compare specs side-by-side Modal */}
-      <CompareModal />
 
       {/* Global Interactive Search Modal Drawer */}
       <SearchModal />
